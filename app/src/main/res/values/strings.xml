@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">Imio</string>
+    <string name="splash_checking_internet">Checking internet connection…</string>
+    <string name="splash_no_internet">No internet connection. Please check your network and try again.</string>
+    <string name="action_retry">Retry</string>
+
+    <string name="bottom_nav_home">Home</string>
+    <string name="bottom_nav_favorite">Favorite</string>
+    <string name="bottom_nav_profile">Profile</string>
+
+    <string name="home_title">Home</string>
+    <string name="home_description">Main content will be here.</string>
+    <string name="home_open_video">Open Video</string>
+    <string name="sample_video_id" translatable="false">sample-video</string>
+    <string name="favorite_title">Favorite</string>
+    <string name="favorite_description">Favorite videos will be here.</string>
+    <string name="profile_title">Profile</string>
+    <string name="profile_description">Profile settings will be here.</string>
+    <string name="video_title">Video</string>
+    <string name="video_description">Opened video id: %1$s</string>
+</resources>
