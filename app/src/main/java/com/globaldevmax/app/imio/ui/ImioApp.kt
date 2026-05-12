@@ -1,23 +1,28 @@
 package com.globaldevmax.app.imio.ui
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -48,6 +53,16 @@ fun ImioApp() {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
     val shouldShowBottomBar = currentDestination?.route in bottomNavDestinations.map { it.route.route }
+    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val navigateToBottomDestination: (AppRoute) -> Unit = { route ->
+        navController.navigate(route.route) {
+            popUpTo(AppRoute.Home.route) {
+                saveState = true
+            }
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
 
     ImioGradientBackground {
         Scaffold(
@@ -55,64 +70,85 @@ fun ImioApp() {
             containerColor = Color.Transparent,
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             bottomBar = {
-                if (shouldShowBottomBar) {
-                    ImioBottomNavigationBar(currentDestination = currentDestination) { route ->
-                        navController.navigate(route.route) {
-                            popUpTo(AppRoute.Home.route) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    }
+                if (shouldShowBottomBar && !isLandscape) {
+                    ImioBottomNavigationBar(
+                        currentDestination = currentDestination,
+                        onDestinationClick = navigateToBottomDestination
+                    )
                 }
             }
         ) { innerPadding ->
-            NavHost(
-                navController = navController,
-                startDestination = AppRoute.Splash.route,
+            Row(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                composable(AppRoute.Splash.route) {
-                    SplashScreen(
-                        connectivityChecker = connectivityChecker,
-                        onInternetAvailable = {
-                            navController.navigate(AppRoute.Home.route) {
-                                popUpTo(AppRoute.Splash.route) {
-                                    inclusive = true
-                                }
-                            }
-                        }
-                    )
-                }
-                composable(AppRoute.Home.route) {
-                    HomeScreen(
-                        onVideoClick = { videoId ->
-                            navController.navigate(AppRoute.Video.createRoute(videoId))
-                        }
-                    )
-                }
-                composable(AppRoute.Favorite.route) {
-                    FavoriteScreen()
-                }
-                composable(AppRoute.Profile.route) {
-                    ProfileScreen()
-                }
-                composable(
-                    route = AppRoute.Video.route,
-                    arguments = listOf(
-                        navArgument(AppRoute.Video.ARG_VIDEO_ID) {
-                            type = NavType.StringType
-                        }
-                    )
-                ) { entry ->
-                    VideoScreen(
-                        videoId = entry.arguments?.getString(AppRoute.Video.ARG_VIDEO_ID).orEmpty()
+                ImioNavHost(
+                    navController = navController,
+                    connectivityChecker = connectivityChecker,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxSize()
+                )
+
+                if (shouldShowBottomBar && isLandscape) {
+                    ImioNavigationRail(
+                        currentDestination = currentDestination,
+                        onDestinationClick = navigateToBottomDestination
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ImioNavHost(
+    navController: androidx.navigation.NavHostController,
+    connectivityChecker: ConnectivityChecker,
+    modifier: Modifier = Modifier
+) {
+    NavHost(
+        navController = navController,
+        startDestination = AppRoute.Splash.route,
+        modifier = modifier
+    ) {
+        composable(AppRoute.Splash.route) {
+            SplashScreen(
+                connectivityChecker = connectivityChecker,
+                onInternetAvailable = {
+                    navController.navigate(AppRoute.Home.route) {
+                        popUpTo(AppRoute.Splash.route) {
+                            inclusive = true
+                        }
+                    }
+                }
+            )
+        }
+        composable(AppRoute.Home.route) {
+            HomeScreen(
+                onRetryClick = {
+                    // TODO: Recall Home API when the data layer is implemented.
+                }
+            )
+        }
+        composable(AppRoute.Favorite.route) {
+            FavoriteScreen()
+        }
+        composable(AppRoute.Profile.route) {
+            ProfileScreen()
+        }
+        composable(
+            route = AppRoute.Video.route,
+            arguments = listOf(
+                navArgument(AppRoute.Video.ARG_VIDEO_ID) {
+                    type = NavType.StringType
+                }
+            )
+        ) { entry ->
+            VideoScreen(
+                videoId = entry.arguments?.getString(AppRoute.Video.ARG_VIDEO_ID).orEmpty()
+            )
         }
     }
 }
@@ -158,6 +194,42 @@ private fun ImioBottomNavigationBar(
                 },
                 label = { Text(text = stringResource(destination.labelResId)) },
                 colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = Color.White,
+                    selectedTextColor = Color.White,
+                    indicatorColor = ImioGradientTop,
+                    unselectedIconColor = Color.White.copy(alpha = 0.58f),
+                    unselectedTextColor = Color.White.copy(alpha = 0.58f)
+                )
+            )
+        }
+    }
+}
+
+@Composable
+private fun ImioNavigationRail(
+    currentDestination: NavDestination?,
+    onDestinationClick: (AppRoute) -> Unit
+) {
+    NavigationRail(
+        modifier = Modifier.navigationBarsPadding(),
+        containerColor = ImioGradientBottom.copy(alpha = 0.88f)
+    ) {
+        bottomNavDestinations.forEach { destination ->
+            val selected = currentDestination?.hierarchy?.any {
+                it.route == destination.route.route
+            } == true
+
+            NavigationRailItem(
+                selected = selected,
+                onClick = { onDestinationClick(destination.route) },
+                icon = {
+                    Icon(
+                        painter = painterResource(destination.iconResId),
+                        contentDescription = stringResource(destination.labelResId)
+                    )
+                },
+                label = { Text(text = stringResource(destination.labelResId)) },
+                colors = NavigationRailItemDefaults.colors(
                     selectedIconColor = Color.White,
                     selectedTextColor = Color.White,
                     indicatorColor = ImioGradientTop,

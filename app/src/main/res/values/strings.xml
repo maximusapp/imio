@@ -8,12 +8,8 @@
     <string name="bottom_nav_favorite">Favorite</string>
     <string name="bottom_nav_profile">Profile</string>
 
-    <string name="home_title">Home</string>
-    <string name="home_description">Main content will be here.</string>
-    <string name="home_open_video">Open Video</string>
-    <string name="sample_video_id" translatable="false">sample-video</string>
-    <string name="favorite_title">Favorite</string>
-    <string name="favorite_description">Favorite videos will be here.</string>
+    <string name="home_empty_state">No content. Check you Internet connection and try again.</string>
+    <string name="favorite_empty_state">Nothing added to favorite</string>
     <string name="profile_title">Profile</string>
     <string name="profile_description">Profile settings will be here.</string>
     <string name="video_title">Video</string>
