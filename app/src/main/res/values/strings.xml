@@ -3,6 +3,7 @@
     <string name="splash_checking_internet">Checking internet connection…</string>
     <string name="splash_no_internet">No internet connection. Please check your network and try again.</string>
     <string name="action_retry">Retry</string>
+    <string name="action_back">Back</string>
 
     <string name="bottom_nav_home">Home</string>
     <string name="bottom_nav_favorite">Favorite</string>
@@ -12,6 +13,36 @@
     <string name="favorite_empty_state">Nothing added to favorite</string>
     <string name="profile_title">Profile</string>
     <string name="profile_description">Profile settings will be here.</string>
+    <string name="profile_imio_premium">Imio Premium</string>
+    <string name="profile_imio_premium_description">Unlock all Premium features</string>
+    <string name="profile_privacy_policy">Privacy Policy</string>
+    <string name="profile_privacy_policy_description">Read how we protect your data</string>
+    <string name="profile_parent_mode">Parent mode</string>
+    <string name="profile_parent_mode_description">Limit child video watching time</string>
+    <string name="profile_footer">%1$s • v%2$s</string>
+    <string name="profile_default_avatar">Default avatar</string>
+    <string name="premium_title">Imio Premium</string>
+    <string name="premium_feature_no_ads">No ads while watching videos</string>
+    <string name="premium_feature_more_content">Access to Premium content</string>
+    <string name="premium_feature_priority">Priority feature updates</string>
+    <string name="premium_feature_item">- %1$s</string>
+    <string name="premium_subscribe">Subscribe for 1.5USD per month</string>
+    <string name="privacy_policy_title">Privacy Policy</string>
+    <string name="privacy_policy_url" translatable="false">https://example.com/privacy-policy</string>
+    <string name="privacy_policy_loading">Loading Privacy Policy...</string>
+    <string name="parent_mode_title">Parent mode</string>
+    <string name="parent_mode_toggle">Activate parent mode</string>
+    <string name="parent_mode_minutes_label">Minutes allowed</string>
+    <string name="parent_mode_minutes_support">How many minutes child can see videos</string>
+    <string name="sleep_dialog_title">Go to bed</string>
+    <string name="sleep_dialog_message">Video time is over.</string>
+    <string name="parent_challenge_title">Parent check</string>
+    <string name="parent_challenge_question">What is %1$d x %2$d?</string>
+    <string name="parent_challenge_answer_label">Answer</string>
+    <string name="parent_challenge_wrong_answer">Wrong answer. Try again.</string>
+    <string name="action_close">Close</string>
+    <string name="action_close_icon">X</string>
+    <string name="action_submit">Submit</string>
     <string name="video_title">Video</string>
     <string name="video_description">Opened video id: %1$s</string>
 </resources>

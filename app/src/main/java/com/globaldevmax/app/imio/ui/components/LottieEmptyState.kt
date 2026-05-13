@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Button
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -20,7 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.TextUnit.Companion
 import androidx.compose.ui.unit.dp
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
@@ -35,6 +32,7 @@ fun LottieEmptyState(
     modifier: Modifier = Modifier,
     style: TextStyle = LocalTextStyle.current,
     messageTextSize: TextUnit = TextUnit.Unspecified,
+    buttonShakeEnable: Boolean = false,
     actionText: String? = null,
     onActionClick: (() -> Unit)? = null
 ) {
@@ -71,15 +69,12 @@ fun LottieEmptyState(
         if (actionText != null && onActionClick != null) {
             Spacer(modifier = Modifier.height(20.dp))
 
-            Button(
+            ImioBlinkButton(
+                text = actionText,
                 onClick = onActionClick,
-                modifier = Modifier.width(150.dp)
-            ) {
-                Text(
-                    text = actionText,
-                    style = style
-                )
-            }
+                textStyle = style,
+                shakeEnabled = buttonShakeEnable
+            )
         }
     }
 }

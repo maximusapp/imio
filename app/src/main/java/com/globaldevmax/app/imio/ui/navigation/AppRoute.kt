@@ -9,6 +9,9 @@ sealed class AppRoute(val route: String) {
     data object Home : AppRoute("home")
     data object Favorite : AppRoute("favorite")
     data object Profile : AppRoute("profile")
+    data object Premium : AppRoute("premium")
+    data object PrivacyPolicy : AppRoute("privacy_policy")
+    data object ParentMode : AppRoute("parent_mode")
 
     data object Video : AppRoute("video/{videoId}") {
         const val ARG_VIDEO_ID = "videoId"
