@@ -3,14 +3,12 @@ package com.globaldevmax.app.imio.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -20,14 +18,10 @@ import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -36,8 +30,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -50,6 +42,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.globaldevmax.app.imio.R
 import com.globaldevmax.app.imio.core.network.ConnectivityChecker
+import com.globaldevmax.app.imio.core.parent.ParentModeStore
+import com.globaldevmax.app.imio.ui.components.ParentVerificationDialog
 import com.globaldevmax.app.imio.ui.navigation.AppRoute
 import com.globaldevmax.app.imio.ui.navigation.bottomNavDestinations
 import com.globaldevmax.app.imio.ui.screen.favorite.FavoriteScreen
@@ -70,18 +64,25 @@ import kotlinx.coroutines.delay
 fun ImioApp() {
     val navController = rememberNavController()
     val connectivityChecker = koinInject<ConnectivityChecker>()
+    val parentModeStore = koinInject<ParentModeStore>()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
     val shouldShowBottomBar = currentDestination?.route in bottomNavDestinations.map { it.route.route }
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
-    var isParentModeActive by remember { mutableStateOf(false) }
-    var allowedMinutes by remember { mutableStateOf("") }
-    var showSleepDialog by remember { mutableStateOf(false) }
+    var isParentModeActive by remember { mutableStateOf(parentModeStore.isParentModeActive()) }
+    var allowedMinutes by remember { mutableStateOf(parentModeStore.getAllowedMinutes()) }
+    var recentMinutes by remember { mutableStateOf(parentModeStore.getRecentMinutes()) }
+    var parentModeEndsAtMillis by remember { mutableStateOf(parentModeStore.getEndsAtMillis()) }
+    var showSleepDialog by remember {
+        mutableStateOf(
+            parentModeStore.isSleepDialogVisible() ||
+                (parentModeStore.isParentModeActive() &&
+                    parentModeStore.getEndsAtMillis() > 0L &&
+                    parentModeStore.getEndsAtMillis() <= System.currentTimeMillis())
+        )
+    }
     var showParentChallenge by remember { mutableStateOf(false) }
-    var challengeAnswer by remember { mutableStateOf("") }
-    var showWrongAnswer by remember { mutableStateOf(false) }
-    val challengeLeft by remember { mutableIntStateOf(6) }
-    val challengeRight by remember { mutableIntStateOf(7) }
+    var isPremiumSubscriptionActive by remember { mutableStateOf(false) }
     val navigateToBottomDestination: (AppRoute) -> Unit = { route ->
         navController.navigate(route.route) {
             popUpTo(AppRoute.Home.route) {
@@ -92,12 +93,16 @@ fun ImioApp() {
         }
     }
 
-    LaunchedEffect(isParentModeActive, allowedMinutes) {
-        val minutes = allowedMinutes.toLongOrNull()
-        if (isParentModeActive && minutes != null && minutes > 0) {
-            delay(minutes * MILLIS_IN_MINUTE)
+    LaunchedEffect(isParentModeActive, parentModeEndsAtMillis, showSleepDialog) {
+        if (isParentModeActive && !showSleepDialog && parentModeEndsAtMillis > 0L) {
+            val remainingMillis = parentModeEndsAtMillis - System.currentTimeMillis()
+            if (remainingMillis > 0L) {
+                delay(remainingMillis)
+            }
+
             if (isParentModeActive) {
                 showSleepDialog = true
+                parentModeStore.showSleepDialog()
             }
         }
     }
@@ -127,13 +132,31 @@ fun ImioApp() {
                     isParentModeActive = isParentModeActive,
                     allowedMinutes = allowedMinutes,
                     onParentModeActiveChange = { active ->
-                        isParentModeActive = active
-                        if (!active) {
+                        if (active) {
+                            isParentModeActive = true
+                            val endsAtMillis = calculateParentModeEndsAtMillis(allowedMinutes)
+                            parentModeEndsAtMillis = endsAtMillis
                             showSleepDialog = false
-                            showParentChallenge = false
+                            parentModeStore.activate(allowedMinutes, endsAtMillis)
+                            parentModeStore.saveRecentMinute(allowedMinutes)
+                            recentMinutes = parentModeStore.getRecentMinutes()
+                        } else {
+                            showParentChallenge = true
                         }
                     },
-                    onAllowedMinutesChange = { allowedMinutes = it },
+                    onAllowedMinutesChange = { minutes ->
+                        allowedMinutes = minutes
+                        parentModeStore.saveAllowedMinutes(minutes)
+                        if (isParentModeActive) {
+                            val endsAtMillis = calculateParentModeEndsAtMillis(minutes)
+                            parentModeEndsAtMillis = endsAtMillis
+                            showSleepDialog = false
+                            parentModeStore.updateEndsAtMillis(endsAtMillis)
+                        }
+                    },
+                    isPremiumSubscriptionActive = isPremiumSubscriptionActive,
+                    onPremiumSubscribed = { isPremiumSubscriptionActive = true },
+                    recentMinutes = recentMinutes,
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxSize()
@@ -147,33 +170,38 @@ fun ImioApp() {
                 }
             }
         }
+
         if (showSleepDialog) {
-            SleepDialog(
-                onCloseClick = {
-                    challengeAnswer = ""
-                    showWrongAnswer = false
+            ParentVerificationDialog(
+                title = stringResource(R.string.sleep_dialog_message),
+                actionText = stringResource(R.string.action_close),
+                animationResId = remember {
+                    listOf(
+                        R.raw.ic_yay_jump,
+                        R.raw.ic_crab_walk,
+                        R.raw.ic_rabbit_with_balloon,
+                        R.raw.ic_panda_sleeping,
+                        R.raw.ic_lazy_doge_sleeping
+                    ).random()
+                },
+                onConfirmed = {
+                    isParentModeActive = false
+                    parentModeEndsAtMillis = 0L
                     showSleepDialog = false
-                    showParentChallenge = true
+                    showParentChallenge = false
+                    parentModeStore.deactivate()
                 }
             )
         }
+
         if (showParentChallenge) {
-            ParentChallengeDialog(
-                left = challengeLeft,
-                right = challengeRight,
-                answer = challengeAnswer,
-                showWrongAnswer = showWrongAnswer,
-                onAnswerChange = { challengeAnswer = it.filter(Char::isDigit) },
-                onSubmit = {
-                    if (challengeAnswer.toIntOrNull() == challengeLeft * challengeRight) {
-                        isParentModeActive = false
-                        showSleepDialog = false
-                        showParentChallenge = false
-                        challengeAnswer = ""
-                        showWrongAnswer = false
-                    } else {
-                        showWrongAnswer = true
-                    }
+            ParentVerificationDialog(
+                onConfirmed = {
+                    isParentModeActive = false
+                    parentModeEndsAtMillis = 0L
+                    showSleepDialog = false
+                    showParentChallenge = false
+                    parentModeStore.deactivate()
                 }
             )
         }
@@ -188,6 +216,9 @@ private fun ImioNavHost(
     allowedMinutes: String,
     onParentModeActiveChange: (Boolean) -> Unit,
     onAllowedMinutesChange: (String) -> Unit,
+    isPremiumSubscriptionActive: Boolean,
+    onPremiumSubscribed: () -> Unit,
+    recentMinutes: List<String>,
     modifier: Modifier = Modifier
 ) {
     NavHost(
@@ -209,6 +240,7 @@ private fun ImioNavHost(
         }
         composable(AppRoute.Home.route) {
             HomeScreen(
+                isPremiumSubscriptionActive = isPremiumSubscriptionActive,
                 onRetryClick = {
                     // TODO: Recall Home API when the data layer is implemented.
                 }
@@ -227,6 +259,7 @@ private fun ImioNavHost(
         composable(AppRoute.Premium.route) {
             PremiumScreen(
                 onSubscribeClick = {
+                    onPremiumSubscribed()
                     // TODO: Connect billing flow for the Premium subscription.
                 },
                 onBackClick = { navController.popBackStack() }
@@ -239,6 +272,7 @@ private fun ImioNavHost(
             ParentModeScreen(
                 isParentModeActive = isParentModeActive,
                 allowedMinutes = allowedMinutes,
+                recentMinutes = recentMinutes,
                 onParentModeActiveChange = onParentModeActiveChange,
                 onAllowedMinutesChange = onAllowedMinutesChange,
                 onBackClick = { navController.popBackStack() }
@@ -261,68 +295,6 @@ private fun ImioNavHost(
 }
 
 @Composable
-private fun SleepDialog(
-    onCloseClick: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = {},
-        confirmButton = {},
-        title = {
-            Row {
-                Text(
-                    text = stringResource(R.string.sleep_dialog_title),
-                    modifier = Modifier.weight(1f)
-                )
-                IconButton(onClick = onCloseClick) {
-                    Text(text = stringResource(R.string.action_close_icon))
-                }
-            }
-        },
-        text = {
-            Text(text = stringResource(R.string.sleep_dialog_message))
-        }
-    )
-}
-
-@Composable
-private fun ParentChallengeDialog(
-    left: Int,
-    right: Int,
-    answer: String,
-    showWrongAnswer: Boolean,
-    onAnswerChange: (String) -> Unit,
-    onSubmit: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = {},
-        title = { Text(text = stringResource(R.string.parent_challenge_title)) },
-        text = {
-            Column {
-                Text(text = stringResource(R.string.parent_challenge_question, left, right))
-                OutlinedTextField(
-                    value = answer,
-                    onValueChange = onAnswerChange,
-                    label = { Text(text = stringResource(R.string.parent_challenge_answer_label)) },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                )
-                if (showWrongAnswer) {
-                    Text(
-                        text = stringResource(R.string.parent_challenge_wrong_answer),
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onSubmit) {
-                Text(text = stringResource(R.string.action_submit))
-            }
-        }
-    )
-}
-
-@Composable
 private fun ImioGradientBackground(content: @Composable () -> Unit) {
     Box(
         modifier = Modifier
@@ -338,6 +310,15 @@ private fun ImioGradientBackground(content: @Composable () -> Unit) {
 }
 
 private const val MILLIS_IN_MINUTE = 60_000L
+
+private fun calculateParentModeEndsAtMillis(allowedMinutes: String): Long {
+    val minutes = allowedMinutes.toLongOrNull() ?: return 0L
+    return if (minutes > 0) {
+        System.currentTimeMillis() + minutes * MILLIS_IN_MINUTE
+    } else {
+        0L
+    }
+}
 
 @Composable
 private fun ImioBottomNavigationBar(

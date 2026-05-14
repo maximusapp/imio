@@ -34,6 +34,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.globaldevmax.app.imio.R
@@ -94,6 +95,33 @@ fun ImioBlinkButton(
 }
 
 @Composable
+fun ImioActionButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    width: Dp = 150.dp,
+    textStyle: TextStyle = LocalTextStyle.current,
+    containerColor: Color = Color(0xFF22C55E),
+    contentColor: Color = Color.White
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier.width(width),
+        shape = RoundedCornerShape(15.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = containerColor,
+            contentColor = contentColor
+        )
+    ) {
+        Text(
+            text = text,
+            style = textStyle,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Composable
 fun ImioBackButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -147,6 +175,7 @@ fun ImioPremiumButton(
             text = text,
             color = Color.White,
             style = textStyle,
+            fontWeight = FontWeight.Bold
         )
     }
 }
