@@ -1,0 +1,3 @@
+sdk.dir=/path/to/Android/sdk
+keepdata.username=your_keepdata_username
+keepdata.password=your_keepdata_password

@@ -1,6 +1,17 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
+}
+
+val localProperties = Properties().apply {
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        load(FileInputStream(localPropertiesFile))
+    }
 }
 
 android {
@@ -19,6 +30,22 @@ android {
         versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField(
+            "String",
+            "KEEPDATA_BASE_URL",
+            "\"https://hellium.keepdata.thehost.ua/\""
+        )
+        buildConfigField(
+            "String",
+            "KEEPDATA_USERNAME",
+            "\"${localProperties.getProperty("keepdata.username", "")}\""
+        )
+        buildConfigField(
+            "String",
+            "KEEPDATA_PASSWORD",
+            "\"${localProperties.getProperty("keepdata.password", "")}\""
+        )
     }
 
     buildTypes {
@@ -64,8 +91,13 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
     implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.exoplayer.hls)
+    implementation(libs.androidx.media3.datasource.okhttp)
     implementation(libs.androidx.media3.ui)
     implementation(libs.lottie.compose)
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

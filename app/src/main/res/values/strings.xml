@@ -4,12 +4,25 @@
     <string name="splash_no_internet">No internet connection. Please check your network and try again.</string>
     <string name="action_retry">Retry</string>
     <string name="action_back">Back</string>
+    <string name="action_cancel">Cancel</string>
 
     <string name="bottom_nav_home">Home</string>
     <string name="bottom_nav_favorite">Favorite</string>
     <string name="bottom_nav_profile">Profile</string>
 
     <string name="home_empty_state">No content. Check you Internet connection and try again.</string>
+    <string name="home_video_preview_placeholder">No preview</string>
+    <string name="home_video_play">Play video</string>
+    <string name="home_video_add_favorite">Add to favorites</string>
+    <string name="home_video_premium_badge">Premium video</string>
+    <string name="home_video_remove_favorite">Remove from favorites</string>
+    <string name="home_video_duration_hours_minutes">%1$dh %2$dm</string>
+    <string name="home_video_duration_hours">%1$dh</string>
+    <string name="home_video_duration_minutes">%1$dm</string>
+    <string name="home_video_format">Format: %1$s</string>
+    <string name="home_load_error">Failed to load videos. Check your connection and try again.</string>
+    <string name="video_not_found">Video not found. Open it from the Home screen first.</string>
+    <string name="video_playback_error">Unable to play this video.</string>
     <string name="favorite_empty_state">Nothing added to favorite</string>
     <string name="profile_title">Profile</string>
     <string name="profile_description">Profile settings will be here.</string>
@@ -21,6 +34,8 @@
     <string name="profile_parent_mode_description">Limit child video watching time</string>
     <string name="profile_footer">%1$s • v%2$s</string>
     <string name="profile_default_avatar">Default avatar</string>
+    <string name="profile_premium_active_badge">Premium active</string>
+    <string name="profile_notifications">Notifications</string>
     <string name="premium_title">Imio Premium</string>
     <string name="premium_feature_no_ads">No ADS in Imio</string>
     <string name="premium_feature_more_content">Access to Premium content</string>
@@ -33,6 +48,9 @@
     <string name="premium_plan_yearly_savings">SAVE 30%</string>
     <string name="premium_free_trial">1 day free trial included</string>
     <string name="premium_subscribe">Continue</string>
+    <string name="premium_required_title">Premium content</string>
+    <string name="premium_required_message">This video is available with Imio Premium. Subscribe to unlock all premium videos.</string>
+    <string name="premium_get_subscription">Get subscription</string>
     <string name="privacy_policy_title">Privacy Policy</string>
     <string name="privacy_policy_url" translatable="false">https://example.com/privacy-policy</string>
     <string name="privacy_policy_loading">Loading Privacy Policy...</string>

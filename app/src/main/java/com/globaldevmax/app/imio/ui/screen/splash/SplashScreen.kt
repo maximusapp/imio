@@ -25,7 +25,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.globaldevmax.app.imio.R
-import com.globaldevmax.app.imio.core.network.ConnectivityChecker
+import com.globaldevmax.app.imio.network.connectivity.ConnectivityChecker
 import com.globaldevmax.app.imio.ui.components.ImioLoadingIndicator
 
 @Composable

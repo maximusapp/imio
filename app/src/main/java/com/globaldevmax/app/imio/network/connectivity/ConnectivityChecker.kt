@@ -1,4 +1,4 @@
-package com.globaldevmax.app.imio.core.network
+package com.globaldevmax.app.imio.network.connectivity
 
 import android.content.Context
 import android.net.ConnectivityManager
