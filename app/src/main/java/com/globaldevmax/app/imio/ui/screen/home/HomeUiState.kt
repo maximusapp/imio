@@ -8,8 +8,12 @@ sealed interface HomeUiState {
     data object Empty : HomeUiState
 
     data class Success(
-        val videos: List<Video>
-    ) : HomeUiState
+        val allVideos: List<Video>,
+        val selectedFilter: VideoFilter = VideoFilter.ALL
+    ) : HomeUiState {
+        val displayedVideos: List<Video>
+            get() = allVideos.filterBy(selectedFilter)
+    }
 
     data class Error(
         val message: String

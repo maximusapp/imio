@@ -24,6 +24,7 @@ import com.globaldevmax.app.imio.ui.components.ImioLoadingIndicator
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
+@androidx.annotation.OptIn(UnstableApi::class)
 @OptIn(UnstableApi::class)
 @Composable
 fun VideoScreen(

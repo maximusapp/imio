@@ -43,9 +43,7 @@ import androidx.navigation.navArgument
 import com.globaldevmax.app.imio.R
 import com.globaldevmax.app.imio.network.connectivity.ConnectivityChecker
 import com.globaldevmax.app.imio.core.parent.ParentModeStore
-import com.globaldevmax.app.imio.domain.model.Video
 import com.globaldevmax.app.imio.ui.components.ParentVerificationDialog
-import com.globaldevmax.app.imio.ui.components.PremiumRequiredDialog
 import com.globaldevmax.app.imio.ui.navigation.AppRoute
 import com.globaldevmax.app.imio.ui.navigation.bottomNavDestinations
 import com.globaldevmax.app.imio.ui.screen.favorite.FavoriteScreen
@@ -86,7 +84,6 @@ fun ImioApp() {
     var showParentChallenge by remember { mutableStateOf(false) }
     var isPremiumSubscriptionActive by remember { mutableStateOf(false) }
     var hasActiveNotification by remember { mutableStateOf(false) }
-    var showPremiumRequiredDialog by remember { mutableStateOf(false) }
     val navigateToBottomDestination: (AppRoute) -> Unit = { route ->
         navController.navigate(route.route) {
             popUpTo(AppRoute.Home.route) {
@@ -161,7 +158,6 @@ fun ImioApp() {
                     isPremiumSubscriptionActive = isPremiumSubscriptionActive,
                     hasActiveNotification = hasActiveNotification,
                     onPremiumSubscribed = { isPremiumSubscriptionActive = true },
-                    onShowPremiumRequiredDialog = { showPremiumRequiredDialog = true },
                     recentMinutes = recentMinutes,
                     modifier = Modifier
                         .weight(1f)
@@ -212,15 +208,6 @@ fun ImioApp() {
             )
         }
 
-        if (showPremiumRequiredDialog) {
-            PremiumRequiredDialog(
-                onDismiss = { showPremiumRequiredDialog = false },
-                onGetSubscription = {
-                    showPremiumRequiredDialog = false
-                    navController.navigate(AppRoute.Premium.route)
-                }
-            )
-        }
     }
 }
 
@@ -235,7 +222,6 @@ private fun ImioNavHost(
     isPremiumSubscriptionActive: Boolean,
     hasActiveNotification: Boolean,
     onPremiumSubscribed: () -> Unit,
-    onShowPremiumRequiredDialog: () -> Unit,
     recentMinutes: List<String>,
     modifier: Modifier = Modifier
 ) {
@@ -258,29 +244,17 @@ private fun ImioNavHost(
         }
         composable(AppRoute.Home.route) {
             HomeScreen(
+                isPremiumSubscriptionActive = isPremiumSubscriptionActive,
                 onVideoClick = { video ->
-                    handleVideoClick(
-                        video = video,
-                        isPremiumSubscriptionActive = isPremiumSubscriptionActive,
-                        onShowPremiumRequiredDialog = onShowPremiumRequiredDialog,
-                        onOpenVideo = { videoId ->
-                            navController.navigate(AppRoute.Video.createRoute(videoId))
-                        }
-                    )
+                    navController.navigate(AppRoute.Video.createRoute(video.id))
                 }
             )
         }
         composable(AppRoute.Favorite.route) {
             FavoriteScreen(
+                isPremiumSubscriptionActive = isPremiumSubscriptionActive,
                 onVideoClick = { video ->
-                    handleVideoClick(
-                        video = video,
-                        isPremiumSubscriptionActive = isPremiumSubscriptionActive,
-                        onShowPremiumRequiredDialog = onShowPremiumRequiredDialog,
-                        onOpenVideo = { videoId ->
-                            navController.navigate(AppRoute.Video.createRoute(videoId))
-                        }
-                    )
+                    navController.navigate(AppRoute.Video.createRoute(video.id))
                 }
             )
         }
@@ -347,19 +321,6 @@ private fun ImioGradientBackground(content: @Composable () -> Unit) {
 }
 
 private const val MILLIS_IN_MINUTE = 60_000L
-
-private fun handleVideoClick(
-    video: Video,
-    isPremiumSubscriptionActive: Boolean,
-    onShowPremiumRequiredDialog: () -> Unit,
-    onOpenVideo: (String) -> Unit
-) {
-    if (video.isPremium && !isPremiumSubscriptionActive) {
-        onShowPremiumRequiredDialog()
-    } else {
-        onOpenVideo(video.id)
-    }
-}
 
 private fun calculateParentModeEndsAtMillis(allowedMinutes: String): Long {
     val minutes = allowedMinutes.toLongOrNull() ?: return 0L

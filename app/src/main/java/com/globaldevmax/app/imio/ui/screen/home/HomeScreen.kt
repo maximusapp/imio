@@ -4,26 +4,37 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.globaldevmax.app.imio.R
 import com.globaldevmax.app.imio.domain.model.Video
+import com.globaldevmax.app.imio.ui.components.HomeVideoFilterBar
 import com.globaldevmax.app.imio.ui.components.ImioLoadingIndicator
 import com.globaldevmax.app.imio.ui.components.LottieEmptyState
 import com.globaldevmax.app.imio.ui.components.VideoListItem
+import com.globaldevmax.app.imio.ui.theme.ImioOnBackground
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun HomeScreen(
+    isPremiumSubscriptionActive: Boolean,
     onVideoClick: (Video) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = koinViewModel()
@@ -78,16 +89,44 @@ fun HomeScreen(
                     ),
                     verticalArrangement = Arrangement.spacedBy(18.dp)
                 ) {
-                    items(
-                        items = state.videos,
-                        key = { video -> video.id }
-                    ) { video ->
-                        VideoListItem(
-                            video = video,
-                            isFavorite = video.id in favoriteIds,
-                            onVideoClick = { onVideoClick(video) },
-                            onFavoriteClick = { viewModel.toggleFavorite(video) }
+                    item(key = "video_filter") {
+                        HomeVideoFilterBar(
+                            selectedFilter = state.selectedFilter,
+                            onFilterSelected = viewModel::onFilterSelected,
+                            modifier = Modifier.fillMaxWidth()
                         )
+                    }
+
+                    if (state.displayedVideos.isEmpty()) {
+                        item(key = "video_filter_empty") {
+                            Text(
+                                text = stringResource(R.string.home_filter_empty),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = ImioOnBackground.copy(alpha = 0.88f),
+                                fontWeight = FontWeight.Medium,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 32.dp, bottom = 16.dp)
+                            )
+                        }
+                    } else {
+                        items(
+                            items = state.displayedVideos,
+                            key = { video -> video.id }
+                        ) { video ->
+                            VideoListItem(
+                                video = video,
+                                isFavorite = video.id in favoriteIds,
+                                isPremiumSubscriptionActive = isPremiumSubscriptionActive,
+                                onVideoClick = {
+                                    if (!video.isPremium || isPremiumSubscriptionActive) {
+                                        onVideoClick(video)
+                                    }
+                                },
+                                onFavoriteClick = { viewModel.toggleFavorite(video) }
+                            )
+                        }
                     }
                 }
             }

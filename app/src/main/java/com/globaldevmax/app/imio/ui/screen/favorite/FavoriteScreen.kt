@@ -22,6 +22,7 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun FavoriteScreen(
+    isPremiumSubscriptionActive: Boolean,
     onVideoClick: (Video) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: FavoriteViewModel = koinViewModel()
@@ -62,7 +63,12 @@ fun FavoriteScreen(
                         VideoListItem(
                             video = video,
                             isFavorite = video.id in favoriteIds,
-                            onVideoClick = { onVideoClick(video) },
+                            isPremiumSubscriptionActive = isPremiumSubscriptionActive,
+                            onVideoClick = {
+                                if (!video.isPremium || isPremiumSubscriptionActive) {
+                                    onVideoClick(video)
+                                }
+                            },
                             onFavoriteClick = { viewModel.toggleFavorite(video) }
                         )
                     }

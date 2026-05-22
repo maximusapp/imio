@@ -49,7 +49,12 @@ class HomeViewModel(
                     if (videos.isEmpty()) {
                         _uiState.value = HomeUiState.Empty
                     } else {
-                        _uiState.update { HomeUiState.Success(videos) }
+                        val previousFilter = (_uiState.value as? HomeUiState.Success)?.selectedFilter
+                            ?: VideoFilter.ALL
+                        _uiState.value = HomeUiState.Success(
+                            allVideos = videos,
+                            selectedFilter = previousFilter
+                        )
                     }
                 }
                 .onFailure { error ->
@@ -58,6 +63,16 @@ class HomeViewModel(
                         message = error.message.orEmpty()
                     )
                 }
+        }
+    }
+
+    fun onFilterSelected(filter: VideoFilter) {
+        _uiState.update { state ->
+            if (state is HomeUiState.Success) {
+                state.copy(selectedFilter = filter)
+            } else {
+                state
+            }
         }
     }
 

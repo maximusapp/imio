@@ -26,7 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.globaldevmax.app.imio.R
 import com.globaldevmax.app.imio.network.connectivity.ConnectivityChecker
-import com.globaldevmax.app.imio.ui.components.ImioLoadingIndicator
+import com.globaldevmax.app.imio.ui.components.ImioGradientLinearLoader
 
 @Composable
 fun SplashScreen(
@@ -64,7 +64,9 @@ fun SplashScreen(
         )
         Spacer(modifier = Modifier.height(40.dp))
         if (isChecking) {
-            ImioLoadingIndicator()
+            ImioGradientLinearLoader(
+                width = 220.dp
+            )
         }
 
         if (hasConnectionError) {
