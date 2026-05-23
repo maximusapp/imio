@@ -299,6 +299,7 @@ private fun ImioNavHost(
         ) { entry ->
             VideoScreen(
                 videoId = entry.arguments?.getString(AppRoute.Video.ARG_VIDEO_ID).orEmpty(),
+                isPremiumSubscriptionActive = isPremiumSubscriptionActive,
                 onBackClick = { navController.popBackStack() }
             )
         }

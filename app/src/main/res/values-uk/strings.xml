@@ -77,6 +77,7 @@
     <string name="action_close">Закрити</string>
     <string name="action_close_icon">X</string>
     <string name="action_submit">Підтвердити</string>
+    <string name="video_related_title">Інші відео</string>
     <string name="video_title">Відео</string>
     <string name="video_description">Відкрито id відео: %1$s</string>
 </resources>

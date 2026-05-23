@@ -24,6 +24,9 @@ class HomeViewModel(
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
     val favoriteIds: StateFlow<Set<String>> = observeFavoriteIdsUseCase()
         .stateIn(
             scope = viewModelScope,
@@ -38,32 +41,44 @@ class HomeViewModel(
     fun loadVideos() {
         viewModelScope.launch {
             _uiState.value = HomeUiState.Loading
+            fetchVideos()
+        }
+    }
 
-            getVideosUseCase()
-                .onSuccess { videos ->
-                    Log.d(TAG, "Loaded ${videos.size} video(s) from KeepData")
-                    videos.forEach { video ->
-                        Log.d(TAG, "Video: id=${video.id}, title=${video.title}, manifest=${video.manifestUrl}")
-                    }
+    fun refreshVideos() {
+        viewModelScope.launch {
+            _isRefreshing.value = true
+            fetchVideos()
+            _isRefreshing.value = false
+        }
+    }
 
-                    if (videos.isEmpty()) {
-                        _uiState.value = HomeUiState.Empty
-                    } else {
-                        val previousFilter = (_uiState.value as? HomeUiState.Success)?.selectedFilter
-                            ?: VideoFilter.ALL
-                        _uiState.value = HomeUiState.Success(
-                            allVideos = videos,
-                            selectedFilter = previousFilter
-                        )
-                    }
+    private suspend fun fetchVideos() {
+        val previousFilter = (_uiState.value as? HomeUiState.Success)?.selectedFilter
+            ?: VideoFilter.ALL
+
+        getVideosUseCase()
+            .onSuccess { videos ->
+                Log.d(TAG, "Loaded ${videos.size} video(s) from KeepData")
+                videos.forEach { video ->
+                    Log.d(TAG, "Video: id=${video.id}, title=${video.title}, manifest=${video.manifestUrl}")
                 }
-                .onFailure { error ->
-                    Log.e(TAG, "Failed to load videos", error)
-                    _uiState.value = HomeUiState.Error(
-                        message = error.message.orEmpty()
+
+                if (videos.isEmpty()) {
+                    _uiState.value = HomeUiState.Empty
+                } else {
+                    _uiState.value = HomeUiState.Success(
+                        allVideos = videos,
+                        selectedFilter = previousFilter
                     )
                 }
-        }
+            }
+            .onFailure { error ->
+                Log.e(TAG, "Failed to load videos", error)
+                _uiState.value = HomeUiState.Error(
+                    message = error.message.orEmpty()
+                )
+            }
     }
 
     fun onFilterSelected(filter: VideoFilter) {

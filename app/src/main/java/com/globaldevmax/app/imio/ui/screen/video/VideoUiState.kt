@@ -6,7 +6,8 @@ sealed interface VideoUiState {
     data object Loading : VideoUiState
 
     data class Ready(
-        val video: Video
+        val video: Video,
+        val otherVideos: List<Video> = emptyList()
     ) : VideoUiState
 
     data class Error(

@@ -9,6 +9,8 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.hls.HlsMediaSource
+import com.globaldevmax.app.imio.domain.model.Video
+import com.globaldevmax.app.imio.domain.usecase.GetCachedVideosUseCase
 import com.globaldevmax.app.imio.domain.usecase.GetVideoByIdUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,6 +22,7 @@ import okhttp3.OkHttpClient
 class VideoViewModel(
     private val videoId: String,
     private val getVideoByIdUseCase: GetVideoByIdUseCase,
+    private val getCachedVideosUseCase: GetCachedVideosUseCase,
     okHttpClient: OkHttpClient
 ) : ViewModel() {
 
@@ -33,33 +36,30 @@ class VideoViewModel(
 
     init {
         viewModelScope.launch {
-            val video = getVideoByIdUseCase(videoId)
-            if (video == null) {
-                Log.e(TAG, "Video not found in cache: $videoId")
-                _uiState.value = VideoUiState.Error(message = "")
-                return@launch
-            }
+            loadVideo(videoId)
+        }
+    }
 
-            Log.d(TAG, "Preparing playback for ${video.manifestUrl}")
-            _uiState.value = VideoUiState.Ready(video)
+    fun switchToVideo(video: Video) {
+        val currentVideo = (_uiState.value as? VideoUiState.Ready)?.video ?: return
+        if (currentVideo.id == video.id) return
+
+        viewModelScope.launch {
+            val resolvedVideo = getVideoByIdUseCase(video.id) ?: video
+            updateReadyState(resolvedVideo)
+            preparePlayerForVideo(resolvedVideo.manifestUrl)
+            Log.d(TAG, "Switched playback to ${resolvedVideo.title}")
         }
     }
 
     fun getOrCreatePlayer(context: android.content.Context): ExoPlayer {
-        val currentState = _uiState.value
-        val manifestUrl = (currentState as? VideoUiState.Ready)?.video?.manifestUrl
+        val manifestUrl = (uiState.value as? VideoUiState.Ready)?.video?.manifestUrl
             ?: error("Player requested before video is ready")
 
         exoPlayer?.let { return it }
 
         return ExoPlayer.Builder(context.applicationContext).build().also { player ->
-            val mediaSource = HlsMediaSource.Factory(dataSourceFactory)
-                .createMediaSource(MediaItem.fromUri(manifestUrl))
-
-            player.setMediaSource(mediaSource)
-            player.prepare()
-            player.playWhenReady = true
-            player.repeatMode = Player.REPEAT_MODE_OFF
+            applyMediaSource(player, manifestUrl)
             exoPlayer = player
         }
     }
@@ -72,6 +72,43 @@ class VideoViewModel(
     override fun onCleared() {
         releasePlayer()
         super.onCleared()
+    }
+
+    private suspend fun loadVideo(id: String) {
+        val video = getVideoByIdUseCase(id)
+        if (video == null) {
+            Log.e(TAG, "Video not found in cache: $id")
+            _uiState.value = VideoUiState.Error(message = "")
+            return
+        }
+
+        Log.d(TAG, "Preparing playback for ${video.manifestUrl}")
+        updateReadyState(video)
+    }
+
+    private fun updateReadyState(video: Video) {
+        val otherVideos = getCachedVideosUseCase()
+            .filter { cachedVideo -> cachedVideo.id != video.id }
+
+        _uiState.value = VideoUiState.Ready(
+            video = video,
+            otherVideos = otherVideos
+        )
+    }
+
+    private fun preparePlayerForVideo(manifestUrl: String) {
+        val player = exoPlayer ?: return
+        applyMediaSource(player, manifestUrl)
+    }
+
+    private fun applyMediaSource(player: ExoPlayer, manifestUrl: String) {
+        val mediaSource = HlsMediaSource.Factory(dataSourceFactory)
+            .createMediaSource(MediaItem.fromUri(manifestUrl))
+
+        player.setMediaSource(mediaSource)
+        player.prepare()
+        player.playWhenReady = true
+        player.repeatMode = Player.REPEAT_MODE_OFF
     }
 
     private companion object {

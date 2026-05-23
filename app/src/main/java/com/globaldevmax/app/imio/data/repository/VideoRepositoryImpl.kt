@@ -20,6 +20,8 @@ class VideoRepositoryImpl(
         }
     }
 
+    override fun getCachedVideos(): List<Video> = cachedVideos
+
     override fun getCachedVideoById(id: String): Video? {
         return cachedVideos.find { it.id == id }
     }

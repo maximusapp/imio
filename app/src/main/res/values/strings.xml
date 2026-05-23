@@ -77,6 +77,7 @@
     <string name="action_close">Close</string>
     <string name="action_close_icon">X</string>
     <string name="action_submit">Submit</string>
+    <string name="video_related_title">More videos</string>
     <string name="video_title">Video</string>
     <string name="video_description">Opened video id: %1$s</string>
 </resources>

@@ -1,5 +1,6 @@
 package com.globaldevmax.app.imio.di
 
+import com.globaldevmax.app.imio.domain.usecase.GetCachedVideosUseCase
 import com.globaldevmax.app.imio.domain.usecase.GetVideoByIdUseCase
 import com.globaldevmax.app.imio.domain.usecase.GetVideosUseCase
 import com.globaldevmax.app.imio.domain.usecase.ObserveFavoriteIdsUseCase
@@ -9,6 +10,7 @@ import org.koin.dsl.module
 
 val domainModule = module {
     factory { GetVideosUseCase(get()) }
+    factory { GetCachedVideosUseCase(get()) }
     factory { GetVideoByIdUseCase(get(), get()) }
     factory { ObserveFavoriteIdsUseCase(get()) }
     factory { ObserveFavoritesUseCase(get()) }

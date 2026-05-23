@@ -13,6 +13,7 @@ val viewModelModule = module {
         VideoViewModel(
             videoId = videoId,
             getVideoByIdUseCase = get(),
+            getCachedVideosUseCase = get(),
             okHttpClient = get()
         )
     }

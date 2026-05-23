@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -36,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.globaldevmax.app.imio.R
 import com.globaldevmax.app.imio.ui.screen.home.VideoFilter
+import com.globaldevmax.app.imio.ui.screen.home.VideoFilterCounts
 import com.globaldevmax.app.imio.ui.theme.ImioGradientBottom
 import com.globaldevmax.app.imio.ui.theme.ImioGradientTop
 import com.globaldevmax.app.imio.ui.theme.ImioOnBackground
@@ -44,10 +46,12 @@ import com.globaldevmax.app.imio.ui.theme.Purple40
 
 private val FilterBarShape = RoundedCornerShape(22.dp)
 private val SegmentShape = RoundedCornerShape(18.dp)
+private val CountBadgeShape = RoundedCornerShape(10.dp)
 
 @Composable
 fun HomeVideoFilterBar(
     selectedFilter: VideoFilter,
+    filterCounts: VideoFilterCounts,
     onFilterSelected: (VideoFilter) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -75,6 +79,7 @@ fun HomeVideoFilterBar(
             VideoFilter.entries.forEach { filter ->
                 FilterSegment(
                     filter = filter,
+                    count = filterCounts.countFor(filter),
                     selected = filter == selectedFilter,
                     premiumGradient = premiumGradient,
                     onClick = { onFilterSelected(filter) },
@@ -88,6 +93,7 @@ fun HomeVideoFilterBar(
 @Composable
 private fun FilterSegment(
     filter: VideoFilter,
+    count: Int,
     selected: Boolean,
     premiumGradient: Brush,
     onClick: () -> Unit,
@@ -99,19 +105,19 @@ private fun FilterSegment(
         animationSpec = tween(durationMillis = 180),
         label = "filterSegmentScale"
     )
-    val textColor by animateColorAsState(
+    val labelColor by animateColorAsState(
         targetValue = when {
             selected && isPremiumSegment -> Color.White
             selected -> ImioGradientBottom
-            else -> ImioOnBackground.copy(alpha = 0.82f)
+            else -> ImioOnBackground.copy(alpha = 0.78f)
         },
         animationSpec = tween(durationMillis = 200),
-        label = "filterSegmentText"
+        label = "filterSegmentLabel"
     )
 
     Box(
         modifier = modifier
-            .height(44.dp)
+            .height(58.dp)
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
@@ -140,31 +146,95 @@ private fun FilterSegment(
             ),
         contentAlignment = Alignment.Center
     ) {
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 6.dp)
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 6.dp)
         ) {
-            if (isPremiumSegment) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_premium),
-                    contentDescription = null,
-                    tint = Color.Unspecified,
-                    modifier = Modifier
-                        .size(22.dp)
-                        .alpha(if (selected) 1f else 0.75f)
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (isPremiumSegment) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_premium),
+                        contentDescription = null,
+                        tint = Color.Unspecified,
+                        modifier = Modifier
+                            .size(18.dp)
+                            .alpha(if (selected) 1f else 0.72f)
+                    )
+                }
+                Text(
+                    text = filter.label(),
+                    color = labelColor,
+                    fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold,
+                    fontSize = 12.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 14.sp
                 )
             }
-            Text(
-                text = filter.label(),
-                color = textColor,
-                fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold,
-                fontSize = 13.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center
+            FilterCountBadge(
+                count = count,
+                selected = selected,
+                isPremiumSegment = isPremiumSegment
             )
         }
+    }
+}
+
+@Composable
+private fun FilterCountBadge(
+    count: Int,
+    selected: Boolean,
+    isPremiumSegment: Boolean,
+) {
+    val countColor by animateColorAsState(
+        targetValue = when {
+            selected && isPremiumSegment -> Color.White
+            selected -> ImioGradientBottom
+            else -> ImioOnBackground.copy(alpha = 0.65f)
+        },
+        animationSpec = tween(durationMillis = 200),
+        label = "filterCountText"
+    )
+    val badgeModifier = when {
+        selected && isPremiumSegment -> Modifier.background(Color.White.copy(alpha = 0.22f))
+        selected -> Modifier.background(
+            brush = Brush.linearGradient(
+                colors = listOf(
+                    ImioGradientBottom.copy(alpha = 0.14f),
+                    ImioGradientTop.copy(alpha = 0.18f)
+                )
+            )
+        )
+        else -> Modifier.background(
+            brush = Brush.linearGradient(
+                colors = listOf(
+                    Color.White.copy(alpha = 0.1f),
+                    Color.White.copy(alpha = 0.06f)
+                )
+            )
+        )
+    }
+
+    Box(
+        modifier = Modifier
+            .clip(CountBadgeShape)
+            .then(badgeModifier)
+            .padding(horizontal = 9.dp, vertical = 2.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = count.toString(),
+            color = countColor,
+            fontWeight = FontWeight.Bold,
+            fontSize = 11.sp,
+            lineHeight = 12.sp,
+            textAlign = TextAlign.Center
+        )
     }
 }
 
