@@ -16,3 +16,12 @@ enum class VideoFilter {
 
 fun List<Video>.filterBy(filter: VideoFilter): List<Video> =
     filter { video -> filter.matches(video) }
+
+fun List<Video>.filterBySearch(query: String): List<Video> {
+    val trimmedQuery = query.trim()
+    if (trimmedQuery.isEmpty()) return this
+
+    return filter { video ->
+        video.title.contains(trimmedQuery, ignoreCase = true)
+    }
+}

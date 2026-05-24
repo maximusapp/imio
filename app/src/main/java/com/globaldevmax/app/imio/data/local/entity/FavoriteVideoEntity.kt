@@ -14,5 +14,6 @@ data class FavoriteVideoEntity(
     val previewImageUrl: String,
     val locale: String,
     val isPremium: Boolean,
+    val isBedtime: Boolean = false,
     val addedAtMillis: Long
 )

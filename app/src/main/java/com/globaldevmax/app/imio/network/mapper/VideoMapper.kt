@@ -12,6 +12,7 @@ fun VideoDto.toDomain(): Video {
         durationMs = durationMs,
         previewImageUrl = previewImage.orEmpty(),
         locale = locale,
-        isPremium = isPremium
+        isPremium = isPremium,
+        isBedtime = isBedtime
     )
 }

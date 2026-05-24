@@ -20,6 +20,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,18 +37,34 @@ import androidx.compose.ui.unit.sp
 import com.globaldevmax.app.imio.BuildConfig
 import com.globaldevmax.app.imio.R
 import com.globaldevmax.app.imio.ui.components.LottieIcon
-private val PremiumActiveBlue = Color(0xFF60A5FA)
-private val PremiumActiveBlueDark = Color(0xFF3B82F6)
+import com.globaldevmax.app.imio.ui.components.ParentVerificationDialog
+private val ProfileActiveBlue = Color(0xFF60A5FA)
+private val ProfileActiveBlueDark = Color(0xFF3B82F6)
+private val ProfileActiveIndicatorGreen = Color(0xFF22C55E)
 
 @Composable
 fun ProfileScreen(
     onPremiumClick: () -> Unit,
     onPrivacyPolicyClick: () -> Unit,
     onParentModeClick: () -> Unit,
+    onEveningModeClick: () -> Unit,
     isPremiumSubscriptionActive: Boolean = false,
+    isParentModeActive: Boolean = false,
+    isEveningModeActive: Boolean = false,
     hasActiveNotification: Boolean = false,
     modifier: Modifier = Modifier
 ) {
+    var showPremiumParentVerification by remember { mutableStateOf(false) }
+
+    if (showPremiumParentVerification) {
+        ParentVerificationDialog(
+            onConfirmed = {
+                showPremiumParentVerification = false
+                onPremiumClick()
+            }
+        )
+    }
+
     Box(
         modifier = modifier.fillMaxSize()
     ) {
@@ -59,15 +79,25 @@ fun ProfileScreen(
             iconResId = R.drawable.ic_premium,
             title = stringResource(R.string.profile_imio_premium),
             description = stringResource(R.string.profile_imio_premium_description),
-            onClick = onPremiumClick,
-            isPremiumHighlighted = isPremiumSubscriptionActive,
+            onClick = { showPremiumParentVerification = true },
+            isHighlighted = isPremiumSubscriptionActive,
             showStarBadge = isPremiumSubscriptionActive
         )
         ProfileMenuItem(
             iconResId = R.drawable.ic_time,
             title = stringResource(R.string.profile_parent_mode),
             description = stringResource(R.string.profile_parent_mode_description),
-            onClick = onParentModeClick
+            onClick = onParentModeClick,
+            isHighlighted = isParentModeActive,
+            showActiveIndicator = isParentModeActive
+        )
+        ProfileMenuItem(
+            iconResId = R.drawable.ic_night,
+            title = stringResource(R.string.profile_evening_mode),
+            description = stringResource(R.string.profile_evening_mode_description),
+            onClick = onEveningModeClick,
+            isHighlighted = isEveningModeActive,
+            showActiveIndicator = isEveningModeActive
         )
         ProfileMenuItem(
             iconResId = R.drawable.ic_privacy_policy,
@@ -113,15 +143,16 @@ private fun ProfileMenuItem(
     description: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    isPremiumHighlighted: Boolean = false,
+    isHighlighted: Boolean = false,
+    showActiveIndicator: Boolean = false,
     showStarBadge: Boolean = false
 ) {
     val shape = RoundedCornerShape(20.dp)
-    val backgroundBrush = if (isPremiumHighlighted) {
+    val backgroundBrush = if (isHighlighted) {
         Brush.horizontalGradient(
             colors = listOf(
-                PremiumActiveBlue.copy(alpha = 0.42f),
-                PremiumActiveBlueDark.copy(alpha = 0.32f)
+                ProfileActiveBlue.copy(alpha = 0.42f),
+                ProfileActiveBlueDark.copy(alpha = 0.32f)
             )
         )
     } else {
@@ -132,8 +163,8 @@ private fun ProfileMenuItem(
             )
         )
     }
-    val borderColor = if (isPremiumHighlighted) {
-        PremiumActiveBlue.copy(alpha = 0.75f)
+    val borderColor = if (isHighlighted) {
+        ProfileActiveBlue.copy(alpha = 0.75f)
     } else {
         Color.Transparent
     }
@@ -173,6 +204,22 @@ private fun ProfileMenuItem(
                     fontSize = 16.sp
                 )
             }
+        }
+
+        if (showActiveIndicator) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 10.dp, end = 12.dp)
+                    .size(12.dp)
+                    .clip(CircleShape)
+                    .background(ProfileActiveIndicatorGreen)
+                    .border(
+                        width = 1.5.dp,
+                        color = Color.White.copy(alpha = 0.9f),
+                        shape = CircleShape
+                    )
+            )
         }
 
         if (showStarBadge) {

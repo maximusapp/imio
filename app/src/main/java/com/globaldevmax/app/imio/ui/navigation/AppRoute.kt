@@ -7,11 +7,13 @@ import com.globaldevmax.app.imio.R
 sealed class AppRoute(val route: String) {
     data object Splash : AppRoute("splash")
     data object Home : AppRoute("home")
+    data object Search : AppRoute("search")
     data object Favorite : AppRoute("favorite")
     data object Profile : AppRoute("profile")
     data object Premium : AppRoute("premium")
     data object PrivacyPolicy : AppRoute("privacy_policy")
     data object ParentMode : AppRoute("parent_mode")
+    data object EveningMode : AppRoute("evening_mode")
 
     data object Video : AppRoute("video/{videoId}") {
         const val ARG_VIDEO_ID = "videoId"
@@ -31,6 +33,11 @@ val bottomNavDestinations = listOf(
         route = AppRoute.Home,
         labelResId = R.string.bottom_nav_home,
         iconResId = R.drawable.ic_home
+    ),
+    BottomNavDestination(
+        route = AppRoute.Search,
+        labelResId = R.string.bottom_nav_search,
+        iconResId = R.drawable.ic_search
     ),
     BottomNavDestination(
         route = AppRoute.Favorite,

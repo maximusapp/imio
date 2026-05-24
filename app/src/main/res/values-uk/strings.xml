@@ -8,6 +8,7 @@
     <string name="action_cancel">Скасувати</string>
 
     <string name="bottom_nav_home">Головна</string>
+    <string name="bottom_nav_search">Пошук</string>
     <string name="bottom_nav_favorite">Обране</string>
     <string name="bottom_nav_profile">Профіль</string>
 
@@ -28,6 +29,12 @@
     <string name="home_filter_premium">Преміум</string>
     <string name="home_filter_standard">Звичайні</string>
     <string name="home_filter_empty">У цій категорії немає відео</string>
+    <string name="search_screen_title">Пошук</string>
+    <string name="search_empty_catalog">Відео ще немає. Потягніть вниз для оновлення або спробуйте ще раз.</string>
+    <string name="search_load_error">Не вдалося завантажити відео. Перевірте підключення та спробуйте ще раз.</string>
+    <string name="home_search_hint">Пошук відео</string>
+    <string name="home_search_empty">Немає відео за вашим запитом</string>
+    <string name="home_search_clear">Очистити пошук</string>
     <string name="video_not_found">Відео не знайдено. Спочатку відкрийте його на головному екрані.</string>
     <string name="video_playback_error">Не вдалося відтворити це відео.</string>
     <string name="favorite_empty_state">У обраному нічого немає</string>
@@ -60,6 +67,14 @@
     <string name="premium_get_subscription">Оформити підписку</string>
     <string name="privacy_policy_title">Політика конфіденційності</string>
     <string name="privacy_policy_loading">Завантаження політики конфіденційності…</string>
+    <string name="profile_evening_mode">Вечірній режим</string>
+    <string name="profile_evening_mode_description">Спокійні колискові відео для підготовки до сну</string>
+    <string name="evening_mode_title">Вечірній режим</string>
+    <string name="evening_mode_description">У цьому режимі показуються лише спокійні колискові відео, щоб м’яко підготувати дитину до сну.</string>
+    <string name="evening_mode_active_hint">Вимкнути вечірній режим можна лише після батьківської перевірки.</string>
+    <string name="evening_mode_activate">Увімкнути</string>
+    <string name="evening_mode_deactivate">Вимкнути</string>
+    <string name="evening_mode_no_videos">Поки що немає колискових відео для цього режиму</string>
     <string name="parent_mode_title">Батьківський режим</string>
     <string name="parent_mode_toggle">Увімкнути батьківський режим</string>
     <string name="parent_mode_activate">Увімкнути</string>

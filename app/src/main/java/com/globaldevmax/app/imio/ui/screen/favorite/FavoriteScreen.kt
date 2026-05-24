@@ -4,12 +4,19 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -18,11 +25,14 @@ import com.globaldevmax.app.imio.R
 import com.globaldevmax.app.imio.domain.model.Video
 import com.globaldevmax.app.imio.ui.components.LottieEmptyState
 import com.globaldevmax.app.imio.ui.components.VideoListItem
+import com.globaldevmax.app.imio.ui.screen.home.forEveningMode
+import com.globaldevmax.app.imio.ui.theme.ImioOnBackground
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun FavoriteScreen(
     isPremiumSubscriptionActive: Boolean,
+    isEveningModeActive: Boolean,
     onVideoClick: (Video) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: FavoriteViewModel = koinViewModel()
@@ -46,6 +56,27 @@ fun FavoriteScreen(
             }
 
             is FavoriteUiState.Success -> {
+                val displayedVideos = state.videos.forEveningMode(isEveningModeActive)
+
+                if (displayedVideos.isEmpty()) {
+                    Text(
+                        text = stringResource(
+                            if (isEveningModeActive) {
+                                R.string.evening_mode_no_videos
+                            } else {
+                                R.string.favorite_empty_state
+                            }
+                        ),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = ImioOnBackground.copy(alpha = 0.88f),
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp)
+                    )
+                } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(
@@ -57,7 +88,7 @@ fun FavoriteScreen(
                     verticalArrangement = Arrangement.spacedBy(18.dp)
                 ) {
                     items(
-                        items = state.videos,
+                        items = displayedVideos,
                         key = { video -> video.id }
                     ) { video ->
                         VideoListItem(
@@ -72,6 +103,7 @@ fun FavoriteScreen(
                             onFavoriteClick = { viewModel.toggleFavorite(video) }
                         )
                     }
+                }
                 }
             }
         }

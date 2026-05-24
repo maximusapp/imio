@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.globaldevmax.app.imio.domain.model.Video
+import com.globaldevmax.app.imio.core.evening.EveningModeStore
 import com.globaldevmax.app.imio.domain.usecase.GetVideosUseCase
 import com.globaldevmax.app.imio.domain.usecase.ObserveFavoriteIdsUseCase
 import com.globaldevmax.app.imio.domain.usecase.ToggleFavoriteUseCase
@@ -18,7 +19,8 @@ import kotlinx.coroutines.launch
 class HomeViewModel(
     private val getVideosUseCase: GetVideosUseCase,
     observeFavoriteIdsUseCase: ObserveFavoriteIdsUseCase,
-    private val toggleFavoriteUseCase: ToggleFavoriteUseCase
+    private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
+    private val eveningModeStore: EveningModeStore
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
@@ -26,6 +28,8 @@ class HomeViewModel(
 
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
+    private var isEveningModeActive = eveningModeStore.isEveningModeActive()
 
     val favoriteIds: StateFlow<Set<String>> = observeFavoriteIdsUseCase()
         .stateIn(
@@ -54,8 +58,8 @@ class HomeViewModel(
     }
 
     private suspend fun fetchVideos() {
-        val previousFilter = (_uiState.value as? HomeUiState.Success)?.selectedFilter
-            ?: VideoFilter.ALL
+        val previousState = _uiState.value as? HomeUiState.Success
+        val previousFilter = previousState?.selectedFilter ?: VideoFilter.ALL
 
         getVideosUseCase()
             .onSuccess { videos ->
@@ -69,7 +73,8 @@ class HomeViewModel(
                 } else {
                     _uiState.value = HomeUiState.Success(
                         allVideos = videos,
-                        selectedFilter = previousFilter
+                        selectedFilter = previousFilter,
+                        isEveningModeActive = isEveningModeActive
                     )
                 }
             }
@@ -89,6 +94,21 @@ class HomeViewModel(
                 state
             }
         }
+    }
+
+    fun setEveningModeActive(isActive: Boolean) {
+        isEveningModeActive = isActive
+        _uiState.update { state ->
+            if (state is HomeUiState.Success) {
+                state.copy(isEveningModeActive = isActive)
+            } else {
+                state
+            }
+        }
+    }
+
+    fun syncEveningModeFromStore() {
+        setEveningModeActive(eveningModeStore.isEveningModeActive())
     }
 
     fun toggleFavorite(video: Video) {

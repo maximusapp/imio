@@ -8,5 +8,6 @@ data class Video(
     val durationMs: Long,
     val previewImageUrl: String,
     val locale: String,
-    val isPremium: Boolean
+    val isPremium: Boolean,
+    val isBedtime: Boolean = false
 )

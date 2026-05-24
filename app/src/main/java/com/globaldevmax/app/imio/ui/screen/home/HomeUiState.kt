@@ -9,16 +9,20 @@ sealed interface HomeUiState {
 
     data class Success(
         val allVideos: List<Video>,
-        val selectedFilter: VideoFilter = VideoFilter.ALL
+        val selectedFilter: VideoFilter = VideoFilter.ALL,
+        val isEveningModeActive: Boolean = false
     ) : HomeUiState {
+        private val modeFilteredVideos: List<Video>
+            get() = allVideos.forEveningMode(isEveningModeActive)
+
         val displayedVideos: List<Video>
-            get() = allVideos.filterBy(selectedFilter)
+            get() = modeFilteredVideos.filterBy(selectedFilter)
 
         val filterCounts: VideoFilterCounts
             get() = VideoFilterCounts(
-                all = allVideos.size,
-                premium = allVideos.count { it.isPremium },
-                standard = allVideos.count { !it.isPremium }
+                all = modeFilteredVideos.size,
+                premium = modeFilteredVideos.count { it.isPremium },
+                standard = modeFilteredVideos.count { !it.isPremium }
             )
     }
 

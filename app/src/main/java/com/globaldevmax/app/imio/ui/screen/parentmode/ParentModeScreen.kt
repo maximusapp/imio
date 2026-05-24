@@ -54,15 +54,17 @@ fun ParentModeScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp)
-                .padding(top = 48.dp),
+                .padding(horizontal = 24.dp)
+                .padding(top = 72.dp, bottom = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             Text(
                 text = stringResource(R.string.parent_mode_title),
                 color = MaterialTheme.colorScheme.onBackground,
                 fontWeight = FontWeight.Bold,
-                fontSize = 28.sp
+                fontSize = 28.sp,
+                textAlign = TextAlign.Center
             )
 
             ParentModeMinutesField(
@@ -101,11 +103,17 @@ private fun ParentModeMinutesField(
     recentMinutes: List<String>,
     onValueChange: (String) -> Unit
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
         Text(
             text = stringResource(R.string.parent_mode_minutes_label),
             color = MaterialTheme.colorScheme.onBackground,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
         )
 
         BasicTextField(
@@ -146,7 +154,9 @@ private fun ParentModeMinutesField(
 
         Text(
             text = stringResource(R.string.parent_mode_minutes_support),
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.70f)
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.70f),
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
         )
 
         if (recentMinutes.isNotEmpty()) {
@@ -155,10 +165,13 @@ private fun ParentModeMinutesField(
             Text(
                 text = stringResource(R.string.parent_mode_recent_minutes),
                 color = MaterialTheme.colorScheme.onBackground,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
             )
             FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 recentMinutes.forEach { minutes ->

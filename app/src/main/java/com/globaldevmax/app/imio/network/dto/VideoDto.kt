@@ -23,5 +23,7 @@ data class VideoDto(
     @SerializedName("locale")
     val locale: String,
     @SerializedName("isPremium")
-    val isPremium: Boolean
+    val isPremium: Boolean,
+    @SerializedName("isBedtime")
+    val isBedtime: Boolean = false
 )

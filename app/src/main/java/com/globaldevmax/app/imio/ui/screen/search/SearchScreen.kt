@@ -1,4 +1,4 @@
-package com.globaldevmax.app.imio.ui.screen.home
+package com.globaldevmax.app.imio.ui.screen.search
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.globaldevmax.app.imio.R
 import com.globaldevmax.app.imio.domain.model.Video
-import com.globaldevmax.app.imio.ui.components.HomeVideoFilterBar
+import com.globaldevmax.app.imio.ui.components.HomeVideoSearchBar
 import com.globaldevmax.app.imio.ui.components.ImioLoadingIndicator
 import com.globaldevmax.app.imio.ui.components.LottieEmptyState
 import com.globaldevmax.app.imio.ui.components.VideoListItem
@@ -42,24 +42,29 @@ import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(
+fun SearchScreen(
     isPremiumSubscriptionActive: Boolean,
     isEveningModeActive: Boolean,
     onVideoClick: (Video) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: HomeViewModel = koinViewModel()
+    viewModel: SearchViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(isEveningModeActive) {
         viewModel.setEveningModeActive(isEveningModeActive)
     }
+    val favoriteIds by viewModel.favoriteIds.collectAsStateWithLifecycle()
+    val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
+    val pullToRefreshState = rememberPullToRefreshState()
 
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                viewModel.syncEveningModeFromStore()
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> viewModel.syncEveningModeFromStore()
+                Lifecycle.Event.ON_STOP -> viewModel.clearSearch()
+                else -> { }
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -67,10 +72,6 @@ fun HomeScreen(
             lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
-
-    val favoriteIds by viewModel.favoriteIds.collectAsStateWithLifecycle()
-    val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
-    val pullToRefreshState = rememberPullToRefreshState()
 
     PullToRefreshBox(
         isRefreshing = isRefreshing,
@@ -93,16 +94,16 @@ fun HomeScreen(
                 .statusBarsPadding()
         ) {
             when (val state = uiState) {
-                HomeUiState.Loading -> {
+                SearchUiState.Loading -> {
                     ImioLoadingIndicator(
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
 
-                HomeUiState.Empty -> {
+                SearchUiState.Empty -> {
                     LottieEmptyState(
                         animationResId = R.raw.cat_playing_anim,
-                        message = stringResource(R.string.home_empty_state),
+                        message = stringResource(R.string.search_empty_catalog),
                         actionText = stringResource(R.string.action_retry),
                         messageTextSize = 20.sp,
                         buttonShakeEnable = true,
@@ -111,11 +112,11 @@ fun HomeScreen(
                     )
                 }
 
-                is HomeUiState.Error -> {
+                is SearchUiState.Error -> {
                     LottieEmptyState(
                         animationResId = R.raw.cat_playing_anim,
                         message = state.message.ifBlank {
-                            stringResource(R.string.home_load_error)
+                            stringResource(R.string.search_load_error)
                         },
                         actionText = stringResource(R.string.action_retry),
                         messageTextSize = 20.sp,
@@ -125,7 +126,7 @@ fun HomeScreen(
                     )
                 }
 
-                is HomeUiState.Success -> {
+                is SearchUiState.Ready -> {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(
@@ -134,28 +135,32 @@ fun HomeScreen(
                             top = 12.dp,
                             bottom = 20.dp
                         ),
-                        verticalArrangement = Arrangement.spacedBy(18.dp)
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        item(key = "video_filter") {
-                            HomeVideoFilterBar(
-                                selectedFilter = state.selectedFilter,
-                                filterCounts = state.filterCounts,
-                                onFilterSelected = viewModel::onFilterSelected,
+                        item(key = "video_search") {
+                            HomeVideoSearchBar(
+                                query = state.searchQuery,
+                                onQueryChange = viewModel::onSearchQueryChange,
+                                onClearClick = viewModel::clearSearch,
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
 
                         if (state.displayedVideos.isEmpty()) {
-                            item(key = "video_filter_empty") {
+                            item(key = "search_results_empty") {
                                 Text(
                                     text = stringResource(
-                                        if (isEveningModeActive) {
-                                            R.string.evening_mode_no_videos
-                                        } else {
-                                            R.string.home_filter_empty
+                                        when {
+                                            isEveningModeActive && state.isSearchActive ->
+                                                R.string.evening_mode_no_videos
+                                            state.isSearchActive ->
+                                                R.string.home_search_empty
+                                            isEveningModeActive ->
+                                                R.string.evening_mode_no_videos
+                                            else ->
+                                                R.string.home_search_empty
                                         }
                                     ),
-                                    style = MaterialTheme.typography.bodyLarge,
                                     color = ImioOnBackground.copy(alpha = 0.88f),
                                     fontWeight = FontWeight.Medium,
                                     textAlign = TextAlign.Center,

@@ -18,8 +18,9 @@ import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,6 +29,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -42,12 +46,15 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.globaldevmax.app.imio.R
 import com.globaldevmax.app.imio.network.connectivity.ConnectivityChecker
+import com.globaldevmax.app.imio.core.evening.EveningModeStore
 import com.globaldevmax.app.imio.core.parent.ParentModeStore
 import com.globaldevmax.app.imio.ui.components.ParentVerificationDialog
 import com.globaldevmax.app.imio.ui.navigation.AppRoute
 import com.globaldevmax.app.imio.ui.navigation.bottomNavDestinations
 import com.globaldevmax.app.imio.ui.screen.favorite.FavoriteScreen
 import com.globaldevmax.app.imio.ui.screen.home.HomeScreen
+import com.globaldevmax.app.imio.ui.screen.search.SearchScreen
+import com.globaldevmax.app.imio.ui.screen.eveningmode.EveningModeScreen
 import com.globaldevmax.app.imio.ui.screen.parentmode.ParentModeScreen
 import com.globaldevmax.app.imio.ui.screen.premium.PremiumScreen
 import com.globaldevmax.app.imio.ui.screen.privacy.PrivacyPolicyScreen
@@ -65,6 +72,7 @@ fun ImioApp() {
     val navController = rememberNavController()
     val connectivityChecker = koinInject<ConnectivityChecker>()
     val parentModeStore = koinInject<ParentModeStore>()
+    val eveningModeStore = koinInject<EveningModeStore>()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
     val shouldShowBottomBar = currentDestination?.route in bottomNavDestinations.map { it.route.route }
@@ -83,7 +91,22 @@ fun ImioApp() {
     }
     var showParentChallenge by remember { mutableStateOf(false) }
     var isPremiumSubscriptionActive by remember { mutableStateOf(false) }
+    var isEveningModeActive by remember { mutableStateOf(eveningModeStore.isEveningModeActive()) }
     var hasActiveNotification by remember { mutableStateOf(false) }
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                isEveningModeActive = eveningModeStore.isEveningModeActive()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
     val navigateToBottomDestination: (AppRoute) -> Unit = { route ->
         navController.navigate(route.route) {
             popUpTo(AppRoute.Home.route) {
@@ -156,8 +179,18 @@ fun ImioApp() {
                         }
                     },
                     isPremiumSubscriptionActive = isPremiumSubscriptionActive,
+                    isEveningModeActive = isEveningModeActive,
                     hasActiveNotification = hasActiveNotification,
                     onPremiumSubscribed = { isPremiumSubscriptionActive = true },
+                    onEveningModeActiveChange = { active ->
+                        if (active) {
+                            eveningModeStore.activate()
+                            isEveningModeActive = true
+                        } else {
+                            eveningModeStore.deactivate()
+                            isEveningModeActive = false
+                        }
+                    },
                     recentMinutes = recentMinutes,
                     modifier = Modifier
                         .weight(1f)
@@ -220,8 +253,10 @@ private fun ImioNavHost(
     onParentModeActiveChange: (Boolean) -> Unit,
     onAllowedMinutesChange: (String) -> Unit,
     isPremiumSubscriptionActive: Boolean,
+    isEveningModeActive: Boolean,
     hasActiveNotification: Boolean,
     onPremiumSubscribed: () -> Unit,
+    onEveningModeActiveChange: (Boolean) -> Unit,
     recentMinutes: List<String>,
     modifier: Modifier = Modifier
 ) {
@@ -245,6 +280,16 @@ private fun ImioNavHost(
         composable(AppRoute.Home.route) {
             HomeScreen(
                 isPremiumSubscriptionActive = isPremiumSubscriptionActive,
+                isEveningModeActive = isEveningModeActive,
+                onVideoClick = { video ->
+                    navController.navigate(AppRoute.Video.createRoute(video.id))
+                }
+            )
+        }
+        composable(AppRoute.Search.route) {
+            SearchScreen(
+                isPremiumSubscriptionActive = isPremiumSubscriptionActive,
+                isEveningModeActive = isEveningModeActive,
                 onVideoClick = { video ->
                     navController.navigate(AppRoute.Video.createRoute(video.id))
                 }
@@ -253,6 +298,7 @@ private fun ImioNavHost(
         composable(AppRoute.Favorite.route) {
             FavoriteScreen(
                 isPremiumSubscriptionActive = isPremiumSubscriptionActive,
+                isEveningModeActive = isEveningModeActive,
                 onVideoClick = { video ->
                     navController.navigate(AppRoute.Video.createRoute(video.id))
                 }
@@ -263,7 +309,10 @@ private fun ImioNavHost(
                 onPremiumClick = { navController.navigate(AppRoute.Premium.route) },
                 onPrivacyPolicyClick = { navController.navigate(AppRoute.PrivacyPolicy.route) },
                 onParentModeClick = { navController.navigate(AppRoute.ParentMode.route) },
+                onEveningModeClick = { navController.navigate(AppRoute.EveningMode.route) },
                 isPremiumSubscriptionActive = isPremiumSubscriptionActive,
+                isParentModeActive = isParentModeActive,
+                isEveningModeActive = isEveningModeActive,
                 hasActiveNotification = hasActiveNotification
             )
         }
@@ -286,6 +335,13 @@ private fun ImioNavHost(
                 recentMinutes = recentMinutes,
                 onParentModeActiveChange = onParentModeActiveChange,
                 onAllowedMinutesChange = onAllowedMinutesChange,
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+        composable(AppRoute.EveningMode.route) {
+            EveningModeScreen(
+                isEveningModeActive = isEveningModeActive,
+                onEveningModeActiveChange = onEveningModeActiveChange,
                 onBackClick = { navController.popBackStack() }
             )
         }

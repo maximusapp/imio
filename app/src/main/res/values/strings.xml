@@ -7,6 +7,7 @@
     <string name="action_cancel">Cancel</string>
 
     <string name="bottom_nav_home">Home</string>
+    <string name="bottom_nav_search">Search</string>
     <string name="bottom_nav_favorite">Favorite</string>
     <string name="bottom_nav_profile">Profile</string>
 
@@ -27,6 +28,12 @@
     <string name="home_filter_premium">Premium</string>
     <string name="home_filter_standard">Standard</string>
     <string name="home_filter_empty">No videos in this category</string>
+    <string name="search_screen_title">Search</string>
+    <string name="search_empty_catalog">No videos available yet. Pull to refresh or try again.</string>
+    <string name="search_load_error">Failed to load videos. Check your connection and try again.</string>
+    <string name="home_search_hint">Search videos</string>
+    <string name="home_search_empty">No videos match your search</string>
+    <string name="home_search_clear">Clear search</string>
     <string name="video_not_found">Video not found. Open it from the Home screen first.</string>
     <string name="video_playback_error">Unable to play this video.</string>
     <string name="favorite_empty_state">Nothing added to favorite</string>
@@ -59,7 +66,15 @@
     <string name="premium_get_subscription">Get subscription</string>
     <string name="privacy_policy_title">Privacy Policy</string>
     <string name="privacy_policy_url" translatable="false">https://example.com/privacy-policy</string>
-    <string name="privacy_policy_loading">Loading Privacy Policy...</string>
+    <string name="privacy_policy_loading">Loading Privacy Policy…</string>
+    <string name="profile_evening_mode">Evening mode</string>
+    <string name="profile_evening_mode_description">Calm lullaby videos to prepare for sleep</string>
+    <string name="evening_mode_title">Evening mode</string>
+    <string name="evening_mode_description">In this mode, only calm lullaby videos are shown to gently prepare your child for sleep.</string>
+    <string name="evening_mode_active_hint">To turn off evening mode, a parent verification is required.</string>
+    <string name="evening_mode_activate">Activate</string>
+    <string name="evening_mode_deactivate">Deactivate</string>
+    <string name="evening_mode_no_videos">No lullaby videos available in this mode yet</string>
     <string name="parent_mode_title">Parent mode</string>
     <string name="parent_mode_toggle">Activate parent mode</string>
     <string name="parent_mode_activate">Activate</string>

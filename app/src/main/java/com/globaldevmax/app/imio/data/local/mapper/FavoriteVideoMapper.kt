@@ -13,6 +13,7 @@ fun Video.toFavoriteEntity(addedAtMillis: Long = System.currentTimeMillis()): Fa
         previewImageUrl = previewImageUrl,
         locale = locale,
         isPremium = isPremium,
+        isBedtime = isBedtime,
         addedAtMillis = addedAtMillis
     )
 }
@@ -26,6 +27,7 @@ fun FavoriteVideoEntity.toDomain(): Video {
         durationMs = durationMs,
         previewImageUrl = previewImageUrl,
         locale = locale,
-        isPremium = isPremium
+        isPremium = isPremium,
+        isBedtime = isBedtime
     )
 }
