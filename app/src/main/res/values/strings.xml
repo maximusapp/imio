@@ -65,7 +65,8 @@
     <string name="premium_required_message">This video is available with Imio Premium. Subscribe to unlock all premium videos.</string>
     <string name="premium_get_subscription">Get subscription</string>
     <string name="privacy_policy_title">Privacy Policy</string>
-    <string name="privacy_policy_url" translatable="false">https://example.com/privacy-policy</string>
+    <string name="privacy_policy_url" translatable="false">https://globaldevmax.com/privacy-policy-uk.html</string>
+    <string name="privacy_policy_asset_file" translatable="false">privacy-policy-uk.html</string>
     <string name="privacy_policy_loading">Loading Privacy Policy…</string>
     <string name="profile_evening_mode">Evening mode</string>
     <string name="profile_evening_mode_description">Calm lullaby videos to prepare for sleep</string>

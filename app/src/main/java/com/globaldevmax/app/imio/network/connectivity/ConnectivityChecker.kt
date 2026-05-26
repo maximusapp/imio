@@ -13,7 +13,10 @@ class ConnectivityChecker(context: Context) {
 
     suspend fun hasInternetConnection(): Boolean = withContext(Dispatchers.IO) {
         delay(SPLASH_CHECK_DELAY_MILLIS)
+        isOnline()
+    }
 
+    suspend fun isOnline(): Boolean = withContext(Dispatchers.IO) {
         val network = connectivityManager.activeNetwork ?: return@withContext false
         val capabilities = connectivityManager.getNetworkCapabilities(network)
             ?: return@withContext false

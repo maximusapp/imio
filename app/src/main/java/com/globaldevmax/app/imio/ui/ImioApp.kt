@@ -326,7 +326,9 @@ private fun ImioNavHost(
             )
         }
         composable(AppRoute.PrivacyPolicy.route) {
-            PrivacyPolicyScreen(url = stringResource(R.string.privacy_policy_url))
+            PrivacyPolicyScreen(
+                onBackClick = { navController.popBackStack() }
+            )
         }
         composable(AppRoute.ParentMode.route) {
             ParentModeScreen(

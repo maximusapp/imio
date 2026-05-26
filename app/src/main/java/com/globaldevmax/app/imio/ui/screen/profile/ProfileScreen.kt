@@ -117,22 +117,22 @@ fun ProfileScreen(
         )
         }
 
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 20.dp, bottom = 72.dp)
-                .size(56.dp)
-                .clip(CircleShape)
-                .background(Color.White),
-            contentAlignment = Alignment.Center
-        ) {
-            LottieIcon(
-                animationResId = R.raw.bell_notification,
-                isPlaying = hasActiveNotification,
-                isGrayscale = !hasActiveNotification,
-                modifier = Modifier.size(38.dp)
-            )
-        }
+//        Box(
+//            modifier = Modifier
+//                .align(Alignment.BottomEnd)
+//                .padding(end = 20.dp, bottom = 72.dp)
+//                .size(56.dp)
+//                .clip(CircleShape)
+//                .background(Color.White),
+//            contentAlignment = Alignment.Center
+//        ) {
+//            LottieIcon(
+//                animationResId = R.raw.bell_notification,
+//                isPlaying = hasActiveNotification,
+//                isGrayscale = !hasActiveNotification,
+//                modifier = Modifier.size(38.dp)
+//            )
+//        }
     }
 }
 
