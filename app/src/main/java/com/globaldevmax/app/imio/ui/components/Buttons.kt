@@ -144,7 +144,8 @@ fun ImioPremiumButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    textStyle: TextStyle = LocalTextStyle.current
+    textStyle: TextStyle = LocalTextStyle.current,
+    enabled: Boolean = true
 ) {
     val shape = RoundedCornerShape(28.dp)
 
@@ -168,7 +169,10 @@ fun ImioPremiumButton(
                 border = BorderStroke(2.dp, Color(0xFF67E8F9)),
                 shape = shape
             )
-            .clickable(onClick = onClick),
+            .clickable(enabled = enabled, onClick = onClick)
+            .then(
+                if (enabled) Modifier else Modifier.graphicsLayer { alpha = 0.5f }
+            ),
         contentAlignment = Alignment.Center
     ) {
         Text(

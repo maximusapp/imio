@@ -48,6 +48,7 @@ import com.globaldevmax.app.imio.R
 import com.globaldevmax.app.imio.network.connectivity.ConnectivityChecker
 import com.globaldevmax.app.imio.core.evening.EveningModeStore
 import com.globaldevmax.app.imio.core.parent.ParentModeStore
+import com.globaldevmax.app.imio.domain.repository.PremiumRepository
 import com.globaldevmax.app.imio.ui.components.ParentVerificationDialog
 import com.globaldevmax.app.imio.ui.navigation.AppRoute
 import com.globaldevmax.app.imio.ui.navigation.bottomNavDestinations
@@ -64,6 +65,7 @@ import com.globaldevmax.app.imio.ui.screen.video.VideoScreen
 import com.globaldevmax.app.imio.ui.theme.FredokaFontFamily
 import com.globaldevmax.app.imio.ui.theme.ImioGradientBottom
 import com.globaldevmax.app.imio.ui.theme.ImioGradientTop
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.compose.koinInject
 import kotlinx.coroutines.delay
 
@@ -73,6 +75,7 @@ fun ImioApp() {
     val connectivityChecker = koinInject<ConnectivityChecker>()
     val parentModeStore = koinInject<ParentModeStore>()
     val eveningModeStore = koinInject<EveningModeStore>()
+    val premiumRepository = koinInject<PremiumRepository>()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
     val shouldShowBottomBar = currentDestination?.route in bottomNavDestinations.map { it.route.route }
@@ -90,15 +93,20 @@ fun ImioApp() {
         )
     }
     var showParentChallenge by remember { mutableStateOf(false) }
-    var isPremiumSubscriptionActive by remember { mutableStateOf(false) }
+    val isPremiumSubscriptionActive by premiumRepository.isPremiumActive.collectAsStateWithLifecycle()
     var isEveningModeActive by remember { mutableStateOf(eveningModeStore.isEveningModeActive()) }
     var hasActiveNotification by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        premiumRepository.start()
+    }
 
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 isEveningModeActive = eveningModeStore.isEveningModeActive()
+                premiumRepository.refreshPurchases()
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -181,7 +189,6 @@ fun ImioApp() {
                     isPremiumSubscriptionActive = isPremiumSubscriptionActive,
                     isEveningModeActive = isEveningModeActive,
                     hasActiveNotification = hasActiveNotification,
-                    onPremiumSubscribed = { isPremiumSubscriptionActive = true },
                     onEveningModeActiveChange = { active ->
                         if (active) {
                             eveningModeStore.activate()
@@ -255,7 +262,6 @@ private fun ImioNavHost(
     isPremiumSubscriptionActive: Boolean,
     isEveningModeActive: Boolean,
     hasActiveNotification: Boolean,
-    onPremiumSubscribed: () -> Unit,
     onEveningModeActiveChange: (Boolean) -> Unit,
     recentMinutes: List<String>,
     modifier: Modifier = Modifier
@@ -318,11 +324,8 @@ private fun ImioNavHost(
         }
         composable(AppRoute.Premium.route) {
             PremiumScreen(
-                onSubscribeClick = {
-                    onPremiumSubscribed()
-                    // TODO: Connect billing flow for the Premium subscription.
-                },
-                onBackClick = { navController.popBackStack() }
+                onBackClick = { navController.popBackStack() },
+                onSubscriptionActivated = { navController.popBackStack() }
             )
         }
         composable(AppRoute.PrivacyPolicy.route) {

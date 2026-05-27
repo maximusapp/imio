@@ -1,5 +1,8 @@
 package com.globaldevmax.app.imio.ui.screen.premium
 
+import android.content.Intent
+import android.net.Uri
+import androidx.activity.ComponentActivity
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -18,34 +21,85 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.globaldevmax.app.imio.R
+import com.globaldevmax.app.imio.domain.model.PremiumPlan
 import com.globaldevmax.app.imio.ui.components.ImioBackButton
 import com.globaldevmax.app.imio.ui.components.ImioPremiumButton
 import com.globaldevmax.app.imio.ui.components.LottieIcon
 import com.globaldevmax.app.imio.ui.theme.ImioGradientTop
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun PremiumScreen(
-    onSubscribeClick: () -> Unit,
     onBackClick: () -> Unit,
-    modifier: Modifier = Modifier
+    onSubscriptionActivated: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: PremiumViewModel = koinViewModel()
 ) {
-    var selectedPlan by remember { mutableStateOf(PremiumPlan.Yearly) }
+    val context = LocalContext.current
+    val activity = context as? ComponentActivity
+
+    val isPremiumActive by viewModel.isPremiumActive.collectAsStateWithLifecycle()
+    val catalog by viewModel.catalog.collectAsStateWithLifecycle()
+    val isBillingReady by viewModel.isBillingReady.collectAsStateWithLifecycle()
+    val purchaseError by viewModel.purchaseError.collectAsStateWithLifecycle()
+    val selectedPlan by viewModel.selectedPlan.collectAsStateWithLifecycle()
+    val isPurchasing by viewModel.isPurchasing.collectAsStateWithLifecycle()
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    var awaitingPurchaseCompletion by remember { mutableStateOf(false) }
+
+    val monthlyPrice = catalog?.monthlyPrice
+        ?: stringResource(R.string.premium_plan_monthly_price)
+    val yearlyPrice = catalog?.yearlyPrice
+        ?: stringResource(R.string.premium_plan_yearly_price)
+
+    LaunchedEffect(isPremiumActive, awaitingPurchaseCompletion) {
+        if (isPremiumActive && awaitingPurchaseCompletion) {
+            awaitingPurchaseCompletion = false
+            onSubscriptionActivated()
+        }
+    }
+
+    LaunchedEffect(isPurchasing) {
+        if (!isPurchasing && !isPremiumActive) {
+            awaitingPurchaseCompletion = false
+        }
+    }
+
+    LaunchedEffect(purchaseError) {
+        val errorKey = purchaseError ?: return@LaunchedEffect
+        val message = when (errorKey) {
+            "billing_not_ready" -> context.getString(R.string.premium_error_billing_not_ready)
+            "billing_launch_failed" -> context.getString(R.string.premium_error_launch_failed)
+            "billing_purchase_failed" -> context.getString(R.string.premium_error_purchase_failed)
+            else -> errorKey
+        }
+        snackbarHostState.showSnackbar(message)
+        viewModel.clearPurchaseError()
+    }
 
     Box(modifier = modifier.fillMaxSize()) {
         ImioBackButton(
@@ -54,6 +108,7 @@ fun PremiumScreen(
                 .align(Alignment.TopStart)
                 .padding(start = 8.dp, top = 28.dp)
         )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -69,14 +124,23 @@ fun PremiumScreen(
                 modifier = Modifier.size(150.dp)
             )
 
-//            Spacer(modifier = Modifier.height(12.dp))
-
             Text(
                 text = stringResource(R.string.premium_title),
                 color = MaterialTheme.colorScheme.onBackground,
                 fontWeight = FontWeight.Bold,
                 fontSize = 28.sp
             )
+
+            if (isPremiumActive) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = stringResource(R.string.premium_active_status),
+                    color = Color(0xFF22C55E),
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 18.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
 
             Spacer(modifier = Modifier.height(18.dp))
 
@@ -93,66 +157,103 @@ fun PremiumScreen(
                     iconResId = R.drawable.ic_sun_with_glasses,
                     text = stringResource(R.string.premium_feature_no_ads)
                 )
-
                 PremiumFeatureDivider()
-
                 PremiumFeature(
                     iconResId = R.drawable.ic_premium,
                     text = stringResource(R.string.premium_feature_more_content)
                 )
-
                 PremiumFeatureDivider()
-
                 PremiumFeature(
                     iconResId = R.drawable.ic_arrow_circle,
                     text = stringResource(R.string.premium_feature_priority)
                 )
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            if (!isPremiumActive) {
+                Spacer(modifier = Modifier.height(18.dp))
 
-            Text(
-                text = stringResource(R.string.premium_choose_plan),
-                color = MaterialTheme.colorScheme.onBackground,
-                fontWeight = FontWeight.Bold,
-                fontSize = 24.sp
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            PremiumPlanItem(
-                title = stringResource(R.string.premium_plan_monthly_title),
-                price = stringResource(R.string.premium_plan_monthly_price),
-                selected = selectedPlan == PremiumPlan.Monthly,
-                onClick = { selectedPlan = PremiumPlan.Monthly }
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            PremiumPlanItem(
-                title = stringResource(R.string.premium_plan_yearly_title),
-                price = stringResource(R.string.premium_plan_yearly_price),
-                selected = selectedPlan == PremiumPlan.Yearly,
-                savingsText = stringResource(R.string.premium_plan_yearly_savings),
-                onClick = { selectedPlan = PremiumPlan.Yearly }
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = stringResource(R.string.premium_free_trial),
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.76f),
-                style = MaterialTheme.typography.bodyMedium
+                Text(
+                    text = stringResource(R.string.premium_choose_plan),
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 24.sp
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                PremiumPlanItem(
+                    title = stringResource(R.string.premium_plan_monthly_title),
+                    price = monthlyPrice,
+                    selected = selectedPlan == PremiumPlan.Monthly,
+                    enabled = !isPurchasing,
+                    onClick = { viewModel.selectPlan(PremiumPlan.Monthly) }
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                PremiumPlanItem(
+                    title = stringResource(R.string.premium_plan_yearly_title),
+                    price = yearlyPrice,
+                    selected = selectedPlan == PremiumPlan.Yearly,
+                    enabled = !isPurchasing,
+                    savingsText = stringResource(R.string.premium_plan_yearly_savings),
+                    onClick = { viewModel.selectPlan(PremiumPlan.Yearly) }
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                TextButton(
+                    onClick = { viewModel.restorePurchases() },
+                    enabled = !isPurchasing
+                ) {
+                    Text(
+                        text = stringResource(R.string.premium_restore_purchases),
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.85f)
+                    )
+                }
+            } else {
+                Spacer(modifier = Modifier.height(24.dp))
+                TextButton(
+                    onClick = {
+                        val packageName = context.packageName
+                        val intent = Intent(
+                            Intent.ACTION_VIEW,
+                            Uri.parse(
+                                "https://play.google.com/store/account/subscriptions?package=$packageName"
+                            )
+                        )
+                        context.startActivity(intent)
+                    }
+                ) {
+                    Text(
+                        text = stringResource(R.string.premium_manage_subscription),
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.85f)
+                    )
+                }
+            }
+        }
+
+        if (!isPremiumActive) {
+            ImioPremiumButton(
+                text = when {
+                    isPurchasing -> stringResource(R.string.premium_subscribe_processing)
+                    !isBillingReady -> stringResource(R.string.premium_subscribe_loading)
+                    else -> stringResource(R.string.premium_subscribe)
+                },
+                onClick = {
+                    activity?.let {
+                        awaitingPurchaseCompletion = true
+                        viewModel.subscribe(it)
+                    }
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(start = 24.dp, end = 24.dp, bottom = 48.dp),
+                enabled = isBillingReady && !isPurchasing && activity != null
             )
         }
 
-        ImioPremiumButton(
-            text = stringResource(R.string.premium_subscribe),
-            onClick = onSubscribeClick,
+        SnackbarHost(
+            hostState = snackbarHostState,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(start = 24.dp, end = 24.dp, bottom = 48.dp)
+                .padding(bottom = 16.dp)
         )
     }
-}
-
-private enum class PremiumPlan {
-    Monthly,
-    Yearly
 }
 
 @Composable
@@ -217,6 +318,7 @@ private fun PremiumPlanItem(
     title: String,
     price: String,
     selected: Boolean,
+    enabled: Boolean,
     onClick: () -> Unit,
     savingsText: String? = null
 ) {
@@ -241,12 +343,12 @@ private fun PremiumPlanItem(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable(enabled = enabled, onClick = onClick)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = if (savingsText != null && selected) 16.dp else 0.dp)
+                .padding(top = if (savingsText != null) 16.dp else 0.dp)
                 .background(background, shape)
                 .border(width = 2.dp, color = borderColor, shape = shape)
                 .padding(horizontal = 18.dp, vertical = 16.dp),
@@ -266,7 +368,7 @@ private fun PremiumPlanItem(
                 fontSize = 17.sp
             )
         }
-        if (savingsText != null && selected) {
+        if (savingsText != null) {
             Text(
                 text = savingsText,
                 color = Color.White,

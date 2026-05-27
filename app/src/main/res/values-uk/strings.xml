@@ -60,8 +60,15 @@
     <string name="premium_plan_yearly_title">1 рік</string>
     <string name="premium_plan_yearly_price">$13.02 / рік</string>
     <string name="premium_plan_yearly_savings">ЕКОНОМІЯ 30%</string>
-    <string name="premium_free_trial">1 день безкоштовного пробного періоду</string>
     <string name="premium_subscribe">Продовжити</string>
+    <string name="premium_subscribe_loading">Завантаження…</string>
+    <string name="premium_subscribe_processing">Обробка…</string>
+    <string name="premium_restore_purchases">Відновити покупки</string>
+    <string name="premium_active_status">Ваша Premium підписка активна</string>
+    <string name="premium_manage_subscription">Керувати підпискою</string>
+    <string name="premium_error_billing_not_ready">Оплата ще не готова. Спробуйте ще раз за мить.</string>
+    <string name="premium_error_launch_failed">Не вдалося почати покупку. Спробуйте ще раз.</string>
+    <string name="premium_error_purchase_failed">Покупку не вдалося завершити. Спробуйте ще раз.</string>
     <string name="premium_required_title">Premium контент</string>
     <string name="premium_required_message">Це відео доступне з Imio Premium. Оформіть підписку, щоб відкрити всі преміум відео.</string>
     <string name="premium_get_subscription">Оформити підписку</string>
