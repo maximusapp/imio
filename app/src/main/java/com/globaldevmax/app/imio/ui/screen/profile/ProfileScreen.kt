@@ -37,7 +37,7 @@ import androidx.compose.ui.unit.sp
 import com.globaldevmax.app.imio.BuildConfig
 import com.globaldevmax.app.imio.R
 import com.globaldevmax.app.imio.ui.ads.ImioBannerAd
-import com.globaldevmax.app.imio.ui.components.LottieIcon
+import com.globaldevmax.app.imio.ui.components.ImioScrollableScreen
 import com.globaldevmax.app.imio.ui.components.ParentVerificationDialog
 
 private val ProfileActiveBlue = Color(0xFF60A5FA)
@@ -63,19 +63,15 @@ fun ProfileScreen(
             onConfirmed = {
                 showPremiumParentVerification = false
                 onPremiumClick()
-            }
+            },
+            onDismiss = { showPremiumParentVerification = false }
         )
     }
 
-    Box(
-        modifier = modifier.fillMaxSize()
+    ImioScrollableScreen(
+        modifier = modifier,
+        horizontalPadding = 20.dp
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 20.dp, vertical = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
             Spacer(modifier = Modifier.height(20.dp))
             ImioBannerAd(
                 adUnitId = stringResource(R.string.ad_unit_profile_banner),
@@ -113,7 +109,7 @@ fun ProfileScreen(
                 description = stringResource(R.string.profile_privacy_policy_description),
                 onClick = onPrivacyPolicyClick
             )
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(32.dp))
 
             Text(
                 text = stringResource(
@@ -123,7 +119,8 @@ fun ProfileScreen(
                 ),
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.68f)
             )
-        }
+            Spacer(modifier = Modifier.height(16.dp))
+    }
 
 //        Box(
 //            modifier = Modifier
@@ -141,7 +138,6 @@ fun ProfileScreen(
 //                modifier = Modifier.size(38.dp)
 //            )
 //        }
-    }
 }
 
 @Composable

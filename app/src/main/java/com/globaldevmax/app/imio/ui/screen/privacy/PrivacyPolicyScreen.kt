@@ -7,8 +7,9 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -20,7 +21,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.globaldevmax.app.imio.R
 import com.globaldevmax.app.imio.network.connectivity.ConnectivityChecker
@@ -49,60 +49,64 @@ fun PrivacyPolicyScreen(
         }
     }
 
-    Box(modifier = modifier.fillMaxSize()) {
+    Column(modifier = modifier.fillMaxSize()) {
         ImioTopHeader(
             title = stringResource(R.string.privacy_policy_title),
             onBackClick = onBackClick
         )
 
-        if (isLoading) {
-            Text(
-                text = stringResource(R.string.privacy_policy_loading),
-                modifier = Modifier.align(Alignment.Center)
-            )
-        }
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+        ) {
+            if (isLoading) {
+                Text(
+                    text = stringResource(R.string.privacy_policy_loading),
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
 
-        pageUrl?.let { url ->
-            key(url) {
-                AndroidView(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(top = 86.dp),
-                    factory = { context ->
-                        WebView(context).apply {
-                            layoutParams = ViewGroup.LayoutParams(
-                                ViewGroup.LayoutParams.MATCH_PARENT,
-                                ViewGroup.LayoutParams.MATCH_PARENT
-                            )
-                            webViewClient = object : WebViewClient() {
-                                override fun onPageStarted(
-                                    view: WebView?,
-                                    startedUrl: String?,
-                                    favicon: Bitmap?
-                                ) {
-                                    isLoading = true
-                                }
+            pageUrl?.let { url ->
+                key(url) {
+                    AndroidView(
+                        modifier = Modifier.fillMaxSize(),
+                        factory = { context ->
+                            WebView(context).apply {
+                                layoutParams = ViewGroup.LayoutParams(
+                                    ViewGroup.LayoutParams.MATCH_PARENT,
+                                    ViewGroup.LayoutParams.MATCH_PARENT
+                                )
+                                webViewClient = object : WebViewClient() {
+                                    override fun onPageStarted(
+                                        view: WebView?,
+                                        startedUrl: String?,
+                                        favicon: Bitmap?
+                                    ) {
+                                        isLoading = true
+                                    }
 
-                                override fun onPageFinished(view: WebView?, finishedUrl: String?) {
-                                    isLoading = false
-                                }
+                                    override fun onPageFinished(view: WebView?, finishedUrl: String?) {
+                                        isLoading = false
+                                    }
 
-                                @Suppress("DEPRECATION")
-                                override fun onReceivedError(
-                                    view: WebView,
-                                    request: WebResourceRequest,
-                                    error: WebResourceError
-                                ) {
-                                    if (request.isForMainFrame && url == remoteUrl) {
-                                        view.loadUrl(localAssetUrl)
+                                    @Suppress("DEPRECATION")
+                                    override fun onReceivedError(
+                                        view: WebView,
+                                        request: WebResourceRequest,
+                                        error: WebResourceError
+                                    ) {
+                                        if (request.isForMainFrame && url == remoteUrl) {
+                                            view.loadUrl(localAssetUrl)
+                                        }
                                     }
                                 }
+                                settings.javaScriptEnabled = false
+                                loadUrl(url)
                             }
-                            settings.javaScriptEnabled = false
-                            loadUrl(url)
                         }
-                    }
-                )
+                    )
+                }
             }
         }
     }

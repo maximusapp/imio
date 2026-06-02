@@ -232,7 +232,8 @@ fun ImioApp() {
                     showSleepDialog = false
                     showParentChallenge = false
                     parentModeStore.deactivate()
-                }
+                },
+                onDismiss = { showSleepDialog = false }
             )
         }
 
@@ -244,7 +245,8 @@ fun ImioApp() {
                     showSleepDialog = false
                     showParentChallenge = false
                     parentModeStore.deactivate()
-                }
+                },
+                onDismiss = { showParentChallenge = false }
             )
         }
 

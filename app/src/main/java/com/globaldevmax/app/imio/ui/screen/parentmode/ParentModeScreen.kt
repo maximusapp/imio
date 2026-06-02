@@ -6,11 +6,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -31,7 +30,7 @@ import androidx.compose.ui.unit.sp
 import com.globaldevmax.app.imio.R
 import com.globaldevmax.app.imio.ui.ads.ImioBannerAd
 import com.globaldevmax.app.imio.ui.components.ImioActionButton
-import com.globaldevmax.app.imio.ui.components.ImioTopHeader
+import com.globaldevmax.app.imio.ui.components.ImioScrollableTopHeaderScreen
 import com.globaldevmax.app.imio.ui.theme.ImioGradientBottom
 import com.globaldevmax.app.imio.ui.theme.ImioGradientTop
 
@@ -46,49 +45,42 @@ fun ParentModeScreen(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Box(modifier = modifier.fillMaxSize()) {
-        ImioTopHeader(
-            title = stringResource(R.string.parent_mode_title),
-            onBackClick = onBackClick
+    ImioScrollableTopHeaderScreen(
+        title = stringResource(R.string.parent_mode_title),
+        onBackClick = onBackClick,
+        modifier = modifier
+    ) {
+        ParentModeMinutesField(
+            value = allowedMinutes,
+            recentMinutes = recentMinutes,
+            showAds = showAds,
+            bannerAdUnitId = stringResource(R.string.ad_unit_parent_mode_banner),
+            onValueChange = { value ->
+                onAllowedMinutesChange(value.filter(Char::isDigit))
+            }
         )
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 24.dp)
-                .padding(top = 86.dp, bottom = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
-            ParentModeMinutesField(
-                value = allowedMinutes,
-                recentMinutes = recentMinutes,
-                showAds = showAds,
-                bannerAdUnitId = stringResource(R.string.ad_unit_parent_mode_banner),
-                onValueChange = { value ->
-                    onAllowedMinutesChange(value.filter(Char::isDigit))
-                }
-            )
 
-            Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(32.dp))
 
-            ImioActionButton(
-                text = stringResource(
-                    if (isParentModeActive) {
-                        R.string.parent_mode_deactivate
-                    } else {
-                        R.string.parent_mode_activate
-                    }
-                ),
-                onClick = { onParentModeActiveChange(!isParentModeActive) },
-                modifier = Modifier.fillMaxWidth().padding(bottom = 50.dp),
-                width = 320.dp,
-                containerColor = if (isParentModeActive) {
-                    Color(0xFFEF4444)
+        ImioActionButton(
+            text = stringResource(
+                if (isParentModeActive) {
+                    R.string.parent_mode_deactivate
                 } else {
-                    Color(0xFF22C55E)
+                    R.string.parent_mode_activate
                 }
-            )
-        }
+            ),
+            onClick = { onParentModeActiveChange(!isParentModeActive) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 24.dp),
+            width = 320.dp,
+            containerColor = if (isParentModeActive) {
+                Color(0xFFEF4444)
+            } else {
+                Color(0xFF22C55E)
+            }
+        )
     }
 }
 

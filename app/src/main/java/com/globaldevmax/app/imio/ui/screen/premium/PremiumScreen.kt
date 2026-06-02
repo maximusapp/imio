@@ -1,6 +1,7 @@
 package com.globaldevmax.app.imio.ui.screen.premium
 
 import android.content.Intent
+import android.content.res.Configuration
 import androidx.activity.ComponentActivity
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
@@ -14,9 +15,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -35,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -112,6 +118,11 @@ fun PremiumScreen(
         viewModel.clearPurchaseError()
     }
 
+    val isLandscape =
+        LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val crownSize = if (isLandscape) 100.dp else 150.dp
+    val scrollState = rememberScrollState()
+
     Box(modifier = modifier.fillMaxSize()) {
         ImioBackButton(
             onClick = onBackClick,
@@ -123,16 +134,30 @@ fun PremiumScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(vertical = 24.dp, horizontal = 15.dp)
-                .padding(bottom = 96.dp),
+                .verticalScroll(scrollState)
+                .navigationBarsPadding()
+                .padding(top = 56.dp, bottom = 24.dp)
+                .padding(horizontal = if (isLandscape) 32.dp else 15.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .then(
+                        if (isLandscape) {
+                            Modifier.widthIn(max = 560.dp)
+                        } else {
+                            Modifier
+                        }
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
             Spacer(modifier = Modifier.height(15.dp))
 
             LottieIcon(
                 animationResId = R.raw.ic_premium_crown,
-                modifier = Modifier.size(150.dp)
+                modifier = Modifier.size(crownSize)
             )
 
             Text(
@@ -213,47 +238,53 @@ fun PremiumScreen(
                     )
                 }
             }
-        }
 
-        if (isPremiumActive) {
-            ImioPremiumButton(
-                text = stringResource(R.string.premium_manage_subscription),
-                onClick = {
-                    val packageName = context.packageName
-                    val intent = Intent(
-                        Intent.ACTION_VIEW,
-                        "https://play.google.com/store/account/subscriptions?package=$packageName".toUri()
-                    )
-                    context.startActivity(intent)
-                },
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(start = 24.dp, end = 24.dp, bottom = 48.dp)
-            )
-        } else {
-            ImioPremiumButton(
-                text = when {
-                    isPurchasing -> stringResource(R.string.premium_subscribe_processing)
-                    !isBillingReady -> stringResource(R.string.premium_subscribe_loading)
-                    else -> stringResource(R.string.premium_subscribe)
-                },
-                onClick = {
-                    activity?.let {
-                        awaitingPurchaseCompletion = true
-                        viewModel.subscribe(it)
-                    }
-                },
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(start = 24.dp, end = 24.dp, bottom = 48.dp),
-                enabled = isBillingReady && !isPurchasing && activity != null
-            )
+            Spacer(modifier = Modifier.height(24.dp))
+
+            if (isPremiumActive) {
+                ImioPremiumButton(
+                    text = stringResource(R.string.premium_manage_subscription),
+                    onClick = {
+                        val packageName = context.packageName
+                        val intent = Intent(
+                            Intent.ACTION_VIEW,
+                            "https://play.google.com/store/account/subscriptions?package=$packageName".toUri()
+                        )
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 9.dp)
+                )
+            } else {
+                ImioPremiumButton(
+                    text = when {
+                        isPurchasing -> stringResource(R.string.premium_subscribe_processing)
+                        !isBillingReady -> stringResource(R.string.premium_subscribe_loading)
+                        else -> stringResource(R.string.premium_subscribe)
+                    },
+                    onClick = {
+                        activity?.let {
+                            awaitingPurchaseCompletion = true
+                            viewModel.subscribe(it)
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 9.dp),
+                    enabled = isBillingReady && !isPurchasing && activity != null
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            }
         }
 
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
                 .padding(bottom = 16.dp)
         )
     }
