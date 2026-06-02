@@ -64,6 +64,10 @@ class VideoViewModel(
         }
     }
 
+    fun pausePlayback() {
+        exoPlayer?.pause()
+    }
+
     fun releasePlayer() {
         exoPlayer?.release()
         exoPlayer = null

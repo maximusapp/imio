@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -124,13 +125,6 @@ fun PremiumScreen(
     val scrollState = rememberScrollState()
 
     Box(modifier = modifier.fillMaxSize()) {
-        ImioBackButton(
-            onClick = onBackClick,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(start = 8.dp, top = 28.dp)
-        )
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -279,6 +273,14 @@ fun PremiumScreen(
             Spacer(modifier = Modifier.height(16.dp))
             }
         }
+
+        ImioBackButton(
+            onClick = onBackClick,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .statusBarsPadding()
+                .padding(start = 8.dp, top = 4.dp)
+        )
 
         SnackbarHost(
             hostState = snackbarHostState,
