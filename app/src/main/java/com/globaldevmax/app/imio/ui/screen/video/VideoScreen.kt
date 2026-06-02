@@ -18,9 +18,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,6 +45,7 @@ import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import com.globaldevmax.app.imio.R
 import com.globaldevmax.app.imio.domain.model.Video
+import com.globaldevmax.app.imio.ui.ads.ImioBannerAd
 import com.globaldevmax.app.imio.ui.components.ImioBackButton
 import com.globaldevmax.app.imio.ui.components.ImioLoadingIndicator
 import com.globaldevmax.app.imio.ui.components.VideoListItem
@@ -69,12 +73,27 @@ fun VideoScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    var isExiting by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isExiting) {
+        if (isExiting) {
+            // Ensure player is fully stopped before we reveal the previous screen.
+            viewModel.releasePlayer()
+            onBackClick()
+        }
+    }
+
+    val handleBack: () -> Unit = {
+        if (!isExiting) {
+            isExiting = true
+        }
+    }
 
     Box(modifier = modifier.fillMaxSize()) {
         when (val state = uiState) {
             VideoUiState.Loading -> {
                 ImioBackButton(
-                    onClick = onBackClick,
+                    onClick = handleBack,
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .statusBarsPadding()
@@ -87,7 +106,7 @@ fun VideoScreen(
 
             is VideoUiState.Error -> {
                 ImioBackButton(
-                    onClick = onBackClick,
+                    onClick = handleBack,
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .statusBarsPadding()
@@ -111,7 +130,7 @@ fun VideoScreen(
                         video = state.video,
                         otherVideos = state.otherVideos,
                         isPremiumSubscriptionActive = isPremiumSubscriptionActive,
-                        onBackClick = onBackClick,
+                        onBackClick = handleBack,
                         onRelatedVideoClick = viewModel::switchToVideo,
                         onCreatePlayerView = { factoryContext ->
                             createPlayerView(
@@ -133,7 +152,7 @@ fun VideoScreen(
                     )
                 } else {
                     LandscapeVideoContent(
-                        onBackClick = onBackClick,
+                        onBackClick = handleBack,
                         onCreatePlayerView = { factoryContext ->
                             createPlayerView(
                                 context = factoryContext,
@@ -226,6 +245,14 @@ private fun PortraitVideoContent(
                 modifier = Modifier.fillMaxSize()
             )
         }
+
+        ImioBannerAd(
+            adUnitId = stringResource(R.string.ad_unit_video_banner),
+            showAds = !isPremiumSubscriptionActive,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 12.dp)
+        )
 
         if (otherVideos.isNotEmpty()) {
             Text(

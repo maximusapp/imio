@@ -2,6 +2,7 @@ package com.globaldevmax.app.imio.ui.screen.search
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -32,6 +33,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.globaldevmax.app.imio.R
 import com.globaldevmax.app.imio.domain.model.Video
+import com.globaldevmax.app.imio.ui.ads.ImioBannerAd
 import com.globaldevmax.app.imio.ui.components.HomeVideoSearchBar
 import com.globaldevmax.app.imio.ui.components.ImioLoadingIndicator
 import com.globaldevmax.app.imio.ui.components.LottieEmptyState
@@ -127,64 +129,90 @@ fun SearchScreen(
                 }
 
                 is SearchUiState.Ready -> {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(
-                            start = 20.dp,
-                            end = 20.dp,
-                            top = 12.dp,
-                            bottom = 20.dp
-                        ),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 20.dp)
+                            .padding(top = 12.dp, bottom = 20.dp)
                     ) {
-                        item(key = "video_search") {
-                            HomeVideoSearchBar(
-                                query = state.searchQuery,
-                                onQueryChange = viewModel::onSearchQueryChange,
-                                onClearClick = viewModel::clearSearch,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
+                        HomeVideoSearchBar(
+                            query = state.searchQuery,
+                            onQueryChange = viewModel::onSearchQueryChange,
+                            onClearClick = viewModel::clearSearch,
+                            modifier = Modifier.fillMaxWidth()
+                        )
 
-                        if (state.displayedVideos.isEmpty()) {
-                            item(key = "search_results_empty") {
-                                Text(
-                                    text = stringResource(
-                                        when {
-                                            isEveningModeActive && state.isSearchActive ->
-                                                R.string.evening_mode_no_videos
-                                            state.isSearchActive ->
-                                                R.string.home_search_empty
-                                            isEveningModeActive ->
-                                                R.string.evening_mode_no_videos
-                                            else ->
-                                                R.string.home_search_empty
-                                        }
-                                    ),
-                                    color = ImioOnBackground.copy(alpha = 0.88f),
-                                    fontWeight = FontWeight.Medium,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(top = 32.dp, bottom = 16.dp)
-                                )
-                            }
-                        } else {
-                            items(
-                                items = state.displayedVideos,
-                                key = { video -> video.id }
-                            ) { video ->
-                                VideoListItem(
-                                    video = video,
-                                    isFavorite = video.id in favoriteIds,
-                                    isPremiumSubscriptionActive = isPremiumSubscriptionActive,
-                                    onVideoClick = {
-                                        if (!video.isPremium || isPremiumSubscriptionActive) {
-                                            onVideoClick(video)
-                                        }
-                                    },
-                                    onFavoriteClick = { viewModel.toggleFavorite(video) }
-                                )
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(top = 14.dp),
+                            contentPadding = PaddingValues(bottom = 4.dp),
+                            verticalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            if (state.displayedVideos.isEmpty()) {
+                                item(key = "search_results_empty") {
+                                    Text(
+                                        text = stringResource(
+                                            when {
+                                                isEveningModeActive && state.isSearchActive ->
+                                                    R.string.evening_mode_no_videos
+                                                state.isSearchActive ->
+                                                    R.string.home_search_empty
+                                                isEveningModeActive ->
+                                                    R.string.evening_mode_no_videos
+                                                else ->
+                                                    R.string.home_search_empty
+                                            }
+                                        ),
+                                        color = ImioOnBackground.copy(alpha = 0.88f),
+                                        fontWeight = FontWeight.Medium,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = 32.dp, bottom = 16.dp)
+                                    )
+                                }
+                            } else {
+                                val videos = state.displayedVideos
+                                item(key = "search_video_0") {
+                                    val video = videos.first()
+                                    VideoListItem(
+                                        video = video,
+                                        isFavorite = video.id in favoriteIds,
+                                        isPremiumSubscriptionActive = isPremiumSubscriptionActive,
+                                        onVideoClick = {
+                                            if (!video.isPremium || isPremiumSubscriptionActive) {
+                                                onVideoClick(video)
+                                            }
+                                        },
+                                        onFavoriteClick = { viewModel.toggleFavorite(video) }
+                                    )
+                                }
+
+                                item(key = "search_banner_after_1") {
+                                    ImioBannerAd(
+                                        adUnitId = stringResource(R.string.ad_unit_search_banner),
+                                        showAds = !isPremiumSubscriptionActive,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+
+                                items(
+                                    items = videos.drop(1),
+                                    key = { video -> video.id }
+                                ) { video ->
+                                    VideoListItem(
+                                        video = video,
+                                        isFavorite = video.id in favoriteIds,
+                                        isPremiumSubscriptionActive = isPremiumSubscriptionActive,
+                                        onVideoClick = {
+                                            if (!video.isPremium || isPremiumSubscriptionActive) {
+                                                onVideoClick(video)
+                                            }
+                                        },
+                                        onFavoriteClick = { viewModel.toggleFavorite(video) }
+                                    )
+                                }
                             }
                         }
                     }

@@ -36,8 +36,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.globaldevmax.app.imio.BuildConfig
 import com.globaldevmax.app.imio.R
+import com.globaldevmax.app.imio.ui.ads.ImioBannerAd
 import com.globaldevmax.app.imio.ui.components.LottieIcon
 import com.globaldevmax.app.imio.ui.components.ParentVerificationDialog
+
 private val ProfileActiveBlue = Color(0xFF60A5FA)
 private val ProfileActiveBlueDark = Color(0xFF3B82F6)
 private val ProfileActiveIndicatorGreen = Color(0xFF22C55E)
@@ -74,47 +76,53 @@ fun ProfileScreen(
                 .padding(horizontal = 20.dp, vertical = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-        Spacer(modifier = Modifier.height(28.dp))
-        ProfileMenuItem(
-            iconResId = R.drawable.ic_premium,
-            title = stringResource(R.string.profile_imio_premium),
-            description = stringResource(R.string.profile_imio_premium_description),
-            onClick = { showPremiumParentVerification = true },
-            isHighlighted = isPremiumSubscriptionActive,
-            showStarBadge = isPremiumSubscriptionActive
-        )
-        ProfileMenuItem(
-            iconResId = R.drawable.ic_time,
-            title = stringResource(R.string.profile_parent_mode),
-            description = stringResource(R.string.profile_parent_mode_description),
-            onClick = onParentModeClick,
-            isHighlighted = isParentModeActive,
-            showActiveIndicator = isParentModeActive
-        )
-        ProfileMenuItem(
-            iconResId = R.drawable.ic_night,
-            title = stringResource(R.string.profile_evening_mode),
-            description = stringResource(R.string.profile_evening_mode_description),
-            onClick = onEveningModeClick,
-            isHighlighted = isEveningModeActive,
-            showActiveIndicator = isEveningModeActive
-        )
-        ProfileMenuItem(
-            iconResId = R.drawable.ic_privacy_policy,
-            title = stringResource(R.string.profile_privacy_policy),
-            description = stringResource(R.string.profile_privacy_policy_description),
-            onClick = onPrivacyPolicyClick
-        )
-        Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(20.dp))
+            ImioBannerAd(
+                adUnitId = stringResource(R.string.ad_unit_profile_banner),
+                showAds = !isPremiumSubscriptionActive,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(18.dp))
+            ProfileMenuItem(
+                iconResId = R.drawable.ic_premium,
+                title = stringResource(R.string.profile_imio_premium),
+                description = stringResource(R.string.profile_imio_premium_description),
+                onClick = { showPremiumParentVerification = true },
+                isHighlighted = isPremiumSubscriptionActive,
+                showStarBadge = isPremiumSubscriptionActive
+            )
+            ProfileMenuItem(
+                iconResId = R.drawable.ic_time,
+                title = stringResource(R.string.profile_parent_mode),
+                description = stringResource(R.string.profile_parent_mode_description),
+                onClick = onParentModeClick,
+                isHighlighted = isParentModeActive,
+                showActiveIndicator = isParentModeActive
+            )
+            ProfileMenuItem(
+                iconResId = R.drawable.ic_night,
+                title = stringResource(R.string.profile_evening_mode),
+                description = stringResource(R.string.profile_evening_mode_description),
+                onClick = onEveningModeClick,
+                isHighlighted = isEveningModeActive,
+                showActiveIndicator = isEveningModeActive
+            )
+            ProfileMenuItem(
+                iconResId = R.drawable.ic_privacy_policy,
+                title = stringResource(R.string.profile_privacy_policy),
+                description = stringResource(R.string.profile_privacy_policy_description),
+                onClick = onPrivacyPolicyClick
+            )
+            Spacer(modifier = Modifier.weight(1f))
 
-        Text(
-            text = stringResource(
-                R.string.profile_footer,
-                stringResource(R.string.app_name),
-                BuildConfig.VERSION_NAME
-            ),
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.68f)
-        )
+            Text(
+                text = stringResource(
+                    R.string.profile_footer,
+                    stringResource(R.string.app_name),
+                    BuildConfig.VERSION_NAME
+                ),
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.68f)
+            )
         }
 
 //        Box(

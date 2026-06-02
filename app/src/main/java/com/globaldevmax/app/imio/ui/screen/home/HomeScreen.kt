@@ -2,6 +2,7 @@ package com.globaldevmax.app.imio.ui.screen.home
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -32,6 +33,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.globaldevmax.app.imio.R
 import com.globaldevmax.app.imio.domain.model.Video
+import com.globaldevmax.app.imio.ui.ads.ImioBannerAd
 import com.globaldevmax.app.imio.ui.components.HomeVideoFilterBar
 import com.globaldevmax.app.imio.ui.components.ImioLoadingIndicator
 import com.globaldevmax.app.imio.ui.components.LottieEmptyState
@@ -126,60 +128,86 @@ fun HomeScreen(
                 }
 
                 is HomeUiState.Success -> {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(
-                            start = 20.dp,
-                            end = 20.dp,
-                            top = 12.dp,
-                            bottom = 20.dp
-                        ),
-                        verticalArrangement = Arrangement.spacedBy(18.dp)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 20.dp)
+                            .padding(top = 12.dp, bottom = 20.dp)
                     ) {
-                        item(key = "video_filter") {
-                            HomeVideoFilterBar(
-                                selectedFilter = state.selectedFilter,
-                                filterCounts = state.filterCounts,
-                                onFilterSelected = viewModel::onFilterSelected,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
+                        HomeVideoFilterBar(
+                            selectedFilter = state.selectedFilter,
+                            filterCounts = state.filterCounts,
+                            onFilterSelected = viewModel::onFilterSelected,
+                            modifier = Modifier.fillMaxWidth()
+                        )
 
-                        if (state.displayedVideos.isEmpty()) {
-                            item(key = "video_filter_empty") {
-                                Text(
-                                    text = stringResource(
-                                        if (isEveningModeActive) {
-                                            R.string.evening_mode_no_videos
-                                        } else {
-                                            R.string.home_filter_empty
-                                        }
-                                    ),
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = ImioOnBackground.copy(alpha = 0.88f),
-                                    fontWeight = FontWeight.Medium,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(top = 32.dp, bottom = 16.dp)
-                                )
-                            }
-                        } else {
-                            items(
-                                items = state.displayedVideos,
-                                key = { video -> video.id }
-                            ) { video ->
-                                VideoListItem(
-                                    video = video,
-                                    isFavorite = video.id in favoriteIds,
-                                    isPremiumSubscriptionActive = isPremiumSubscriptionActive,
-                                    onVideoClick = {
-                                        if (!video.isPremium || isPremiumSubscriptionActive) {
-                                            onVideoClick(video)
-                                        }
-                                    },
-                                    onFavoriteClick = { viewModel.toggleFavorite(video) }
-                                )
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(top = 18.dp),
+                            contentPadding = PaddingValues(bottom = 4.dp),
+                            verticalArrangement = Arrangement.spacedBy(18.dp)
+                        ) {
+                            if (state.displayedVideos.isEmpty()) {
+                                item(key = "video_filter_empty") {
+                                    Text(
+                                        text = stringResource(
+                                            if (isEveningModeActive) {
+                                                R.string.evening_mode_no_videos
+                                            } else {
+                                                R.string.home_filter_empty
+                                            }
+                                        ),
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = ImioOnBackground.copy(alpha = 0.88f),
+                                        fontWeight = FontWeight.Medium,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = 32.dp, bottom = 16.dp)
+                                    )
+                                }
+                            } else {
+                                val videos = state.displayedVideos
+                                item(key = "home_video_0") {
+                                    val video = videos.first()
+                                    VideoListItem(
+                                        video = video,
+                                        isFavorite = video.id in favoriteIds,
+                                        isPremiumSubscriptionActive = isPremiumSubscriptionActive,
+                                        onVideoClick = {
+                                            if (!video.isPremium || isPremiumSubscriptionActive) {
+                                                onVideoClick(video)
+                                            }
+                                        },
+                                        onFavoriteClick = { viewModel.toggleFavorite(video) }
+                                    )
+                                }
+
+                                item(key = "home_banner_after_1") {
+                                    ImioBannerAd(
+                                        adUnitId = stringResource(R.string.ad_unit_home_banner),
+                                        showAds = !isPremiumSubscriptionActive,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+
+                                items(
+                                    items = videos.drop(1),
+                                    key = { video -> video.id }
+                                ) { video ->
+                                    VideoListItem(
+                                        video = video,
+                                        isFavorite = video.id in favoriteIds,
+                                        isPremiumSubscriptionActive = isPremiumSubscriptionActive,
+                                        onVideoClick = {
+                                            if (!video.isPremium || isPremiumSubscriptionActive) {
+                                                onVideoClick(video)
+                                            }
+                                        },
+                                        onFavoriteClick = { viewModel.toggleFavorite(video) }
+                                    )
+                                }
                             }
                         }
                     }

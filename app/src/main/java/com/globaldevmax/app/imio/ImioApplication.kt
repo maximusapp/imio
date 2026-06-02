@@ -5,6 +5,7 @@ import coil3.ImageLoader
 import coil3.SingletonImageLoader
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import com.globaldevmax.app.imio.di.appModule
+import com.google.android.gms.ads.MobileAds
 import okhttp3.OkHttpClient
 import org.koin.android.ext.android.getKoin
 import org.koin.android.ext.koin.androidContext
@@ -21,6 +22,8 @@ class ImioApplication : Application(), SingletonImageLoader.Factory {
             androidContext(this@ImioApplication)
             modules(appModule)
         }
+
+        MobileAds.initialize(this)
     }
 
     override fun newImageLoader(context: android.content.Context): ImageLoader {

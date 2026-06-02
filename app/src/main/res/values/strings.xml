@@ -6,6 +6,17 @@
     <string name="action_back">Back</string>
     <string name="action_cancel">Cancel</string>
 
+    <!-- Ads (TEST ids) -->
+    <string name="admob_app_id" translatable="false">ca-app-pub-5784900812234824~9248087637</string>
+    <string name="ad_unit_test_banner" translatable="false">ca-app-pub-3940256099942544/6300978111</string>
+    <string name="ad_unit_home_banner" translatable="false">ca-app-pub-5784900812234824/2422571247</string>
+    <string name="ad_unit_search_banner" translatable="false">ca-app-pub-5784900812234824/7942187312</string>
+    <string name="ad_unit_favorite_banner" translatable="false">ca-app-pub-5784900812234824/5316023976</string>
+    <string name="ad_unit_profile_banner" translatable="false">ca-app-pub-5784900812234824/2305197342</string>
+    <string name="ad_unit_evening_mode_banner" translatable="false">ca-app-pub-5784900812234824/3889741756</string>
+    <string name="ad_unit_parent_mode_banner" translatable="false">ca-app-pub-5784900812234824/2418701815</string>
+    <string name="ad_unit_video_banner" translatable="false">ca-app-pub-5784900812234824/7475283452</string>
+
     <string name="bottom_nav_home">Home</string>
     <string name="bottom_nav_search">Search</string>
     <string name="bottom_nav_favorite">Favorite</string>
@@ -64,6 +75,8 @@
     <string name="premium_subscribe_processing">Processing…</string>
     <string name="premium_restore_purchases">Restore purchases</string>
     <string name="premium_active_status">Your Premium subscription is active</string>
+    <string name="premium_next_billing_label">Next billing</string>
+    <string name="premium_valid_until_label">Valid until</string>
     <string name="premium_manage_subscription">Manage subscription</string>
     <string name="premium_error_billing_not_ready">Billing is not ready yet. Please try again in a moment.</string>
     <string name="premium_error_launch_failed">Could not start the purchase. Please try again.</string>

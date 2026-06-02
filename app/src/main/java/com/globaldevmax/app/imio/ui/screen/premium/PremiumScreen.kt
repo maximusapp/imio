@@ -1,7 +1,6 @@
 package com.globaldevmax.app.imio.ui.screen.premium
 
 import android.content.Intent
-import android.net.Uri
 import androidx.activity.ComponentActivity
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
@@ -18,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -45,11 +45,17 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.globaldevmax.app.imio.R
 import com.globaldevmax.app.imio.domain.model.PremiumPlan
+import com.globaldevmax.app.imio.domain.model.PremiumSubscriptionInfo
 import com.globaldevmax.app.imio.ui.components.ImioBackButton
 import com.globaldevmax.app.imio.ui.components.ImioPremiumButton
 import com.globaldevmax.app.imio.ui.components.LottieIcon
 import com.globaldevmax.app.imio.ui.theme.ImioGradientTop
 import org.koin.androidx.compose.koinViewModel
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+import androidx.core.net.toUri
 
 @Composable
 fun PremiumScreen(
@@ -62,6 +68,7 @@ fun PremiumScreen(
     val activity = context as? ComponentActivity
 
     val isPremiumActive by viewModel.isPremiumActive.collectAsStateWithLifecycle()
+    val subscriptionInfo by viewModel.subscriptionInfo.collectAsStateWithLifecycle()
     val catalog by viewModel.catalog.collectAsStateWithLifecycle()
     val isBillingReady by viewModel.isBillingReady.collectAsStateWithLifecycle()
     val purchaseError by viewModel.purchaseError.collectAsStateWithLifecycle()
@@ -75,6 +82,10 @@ fun PremiumScreen(
         ?: stringResource(R.string.premium_plan_monthly_price)
     val yearlyPrice = catalog?.yearlyPrice
         ?: stringResource(R.string.premium_plan_yearly_price)
+
+    val errorBillingNotReady = stringResource(R.string.premium_error_billing_not_ready)
+    val errorBillingLaunchFailed = stringResource(R.string.premium_error_launch_failed)
+    val errorBillingPurchaseFailed = stringResource(R.string.premium_error_purchase_failed)
 
     LaunchedEffect(isPremiumActive, awaitingPurchaseCompletion) {
         if (isPremiumActive && awaitingPurchaseCompletion) {
@@ -92,9 +103,9 @@ fun PremiumScreen(
     LaunchedEffect(purchaseError) {
         val errorKey = purchaseError ?: return@LaunchedEffect
         val message = when (errorKey) {
-            "billing_not_ready" -> context.getString(R.string.premium_error_billing_not_ready)
-            "billing_launch_failed" -> context.getString(R.string.premium_error_launch_failed)
-            "billing_purchase_failed" -> context.getString(R.string.premium_error_purchase_failed)
+            "billing_not_ready" -> errorBillingNotReady
+            "billing_launch_failed" -> errorBillingLaunchFailed
+            "billing_purchase_failed" -> errorBillingPurchaseFailed
             else -> errorKey
         }
         snackbarHostState.showSnackbar(message)
@@ -132,13 +143,9 @@ fun PremiumScreen(
             )
 
             if (isPremiumActive) {
-                Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    text = stringResource(R.string.premium_active_status),
-                    color = Color(0xFF22C55E),
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 18.sp,
-                    textAlign = TextAlign.Center
+                Spacer(modifier = Modifier.height(14.dp))
+                PremiumActiveStatusCard(
+                    subscriptionInfo = subscriptionInfo
                 )
             }
 
@@ -205,29 +212,25 @@ fun PremiumScreen(
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.85f)
                     )
                 }
-            } else {
-                Spacer(modifier = Modifier.height(24.dp))
-                TextButton(
-                    onClick = {
-                        val packageName = context.packageName
-                        val intent = Intent(
-                            Intent.ACTION_VIEW,
-                            Uri.parse(
-                                "https://play.google.com/store/account/subscriptions?package=$packageName"
-                            )
-                        )
-                        context.startActivity(intent)
-                    }
-                ) {
-                    Text(
-                        text = stringResource(R.string.premium_manage_subscription),
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.85f)
-                    )
-                }
             }
         }
 
-        if (!isPremiumActive) {
+        if (isPremiumActive) {
+            ImioPremiumButton(
+                text = stringResource(R.string.premium_manage_subscription),
+                onClick = {
+                    val packageName = context.packageName
+                    val intent = Intent(
+                        Intent.ACTION_VIEW,
+                        "https://play.google.com/store/account/subscriptions?package=$packageName".toUri()
+                    )
+                    context.startActivity(intent)
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(start = 24.dp, end = 24.dp, bottom = 48.dp)
+            )
+        } else {
             ImioPremiumButton(
                 text = when {
                     isPurchasing -> stringResource(R.string.premium_subscribe_processing)
@@ -253,6 +256,104 @@ fun PremiumScreen(
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 16.dp)
         )
+    }
+}
+
+@Composable
+private fun PremiumActiveStatusCard(
+    subscriptionInfo: PremiumSubscriptionInfo?
+) {
+    val cardShape = RoundedCornerShape(22.dp)
+    val accentCyan = Color(0xFF67E8F9)
+    val activeGreen = Color(0xFF22C55E)
+
+    val expiryMillis = subscriptionInfo?.expiryTimeMillis
+    val formattedExpiry = if (expiryMillis != null) {
+        remember(expiryMillis) {
+            DateTimeFormatter.ofPattern("d MMMM yyyy, HH:mm")
+                .withLocale(Locale.getDefault())
+                .format(
+                    Instant.ofEpochMilli(expiryMillis).atZone(ZoneId.systemDefault())
+                )
+        }
+    } else {
+        null
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color.White.copy(alpha = 0.16f),
+                        Color.White.copy(alpha = 0.08f)
+                    )
+                ),
+                shape = cardShape
+            )
+            .border(
+                width = 1.5.dp,
+                brush = Brush.horizontalGradient(
+                    colors = listOf(
+                        accentCyan.copy(alpha = 0.85f),
+                        ImioGradientTop.copy(alpha = 0.6f)
+                    )
+                ),
+                shape = cardShape
+            )
+            .padding(horizontal = 18.dp, vertical = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(10.dp)
+                    .background(activeGreen, CircleShape)
+            )
+            Text(
+                text = stringResource(R.string.premium_active_status),
+                color = activeGreen,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 17.sp,
+                textAlign = TextAlign.Center
+            )
+        }
+
+        val info = subscriptionInfo
+        if (formattedExpiry != null && info != null) {
+            Spacer(modifier = Modifier.height(14.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(Color.White.copy(alpha = 0.18f))
+            )
+            Spacer(modifier = Modifier.height(14.dp))
+            Text(
+                text = if (info.autoRenewing) {
+                    stringResource(R.string.premium_next_billing_label)
+                } else {
+                    stringResource(R.string.premium_valid_until_label)
+                },
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.72f),
+                fontWeight = FontWeight.Medium,
+                fontSize = 14.sp,
+                letterSpacing = 0.3.sp
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = formattedExpiry,
+                color = accentCyan,
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                textAlign = TextAlign.Center,
+                lineHeight = 26.sp
+            )
+        }
     }
 }
 

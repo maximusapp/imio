@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.globaldevmax.app.imio.R
 import com.globaldevmax.app.imio.network.connectivity.ConnectivityChecker
-import com.globaldevmax.app.imio.ui.components.ImioBackButton
+import com.globaldevmax.app.imio.ui.components.ImioTopHeader
 import org.koin.compose.koinInject
 
 @Composable
@@ -50,11 +50,9 @@ fun PrivacyPolicyScreen(
     }
 
     Box(modifier = modifier.fillMaxSize()) {
-        ImioBackButton(
-            onClick = onBackClick,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(start = 8.dp, top = 28.dp)
+        ImioTopHeader(
+            title = stringResource(R.string.privacy_policy_title),
+            onBackClick = onBackClick
         )
 
         if (isLoading) {
@@ -69,7 +67,7 @@ fun PrivacyPolicyScreen(
                 AndroidView(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(top = 72.dp),
+                        .padding(top = 86.dp),
                     factory = { context ->
                         WebView(context).apply {
                             layoutParams = ViewGroup.LayoutParams(

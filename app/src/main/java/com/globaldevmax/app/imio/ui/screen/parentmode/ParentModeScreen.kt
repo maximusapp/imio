@@ -29,8 +29,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.globaldevmax.app.imio.R
+import com.globaldevmax.app.imio.ui.ads.ImioBannerAd
 import com.globaldevmax.app.imio.ui.components.ImioActionButton
-import com.globaldevmax.app.imio.ui.components.ImioBackButton
+import com.globaldevmax.app.imio.ui.components.ImioTopHeader
 import com.globaldevmax.app.imio.ui.theme.ImioGradientBottom
 import com.globaldevmax.app.imio.ui.theme.ImioGradientTop
 
@@ -41,39 +42,33 @@ fun ParentModeScreen(
     recentMinutes: List<String>,
     onParentModeActiveChange: (Boolean) -> Unit,
     onAllowedMinutesChange: (String) -> Unit,
+    showAds: Boolean,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier.fillMaxSize()) {
-        ImioBackButton(
-            onClick = onBackClick,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(start = 8.dp, top = 28.dp)
+        ImioTopHeader(
+            title = stringResource(R.string.parent_mode_title),
+            onBackClick = onBackClick
         )
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 24.dp)
-                .padding(top = 72.dp, bottom = 24.dp),
+                .padding(top = 86.dp, bottom = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            Text(
-                text = stringResource(R.string.parent_mode_title),
-                color = MaterialTheme.colorScheme.onBackground,
-                fontWeight = FontWeight.Bold,
-                fontSize = 28.sp,
-                textAlign = TextAlign.Center
-            )
-
             ParentModeMinutesField(
                 value = allowedMinutes,
                 recentMinutes = recentMinutes,
+                showAds = showAds,
+                bannerAdUnitId = stringResource(R.string.ad_unit_parent_mode_banner),
                 onValueChange = { value ->
                     onAllowedMinutesChange(value.filter(Char::isDigit))
                 }
             )
+
             Spacer(modifier = Modifier.weight(1f))
 
             ImioActionButton(
@@ -101,6 +96,8 @@ fun ParentModeScreen(
 private fun ParentModeMinutesField(
     value: String,
     recentMinutes: List<String>,
+    showAds: Boolean,
+    bannerAdUnitId: String,
     onValueChange: (String) -> Unit
 ) {
     Column(
@@ -114,6 +111,14 @@ private fun ParentModeMinutesField(
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
+        )
+
+        ImioBannerAd(
+            adUnitId = bannerAdUnitId,
+            showAds = showAds,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 12.dp, bottom = 4.dp)
         )
 
         BasicTextField(

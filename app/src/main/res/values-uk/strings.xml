@@ -65,6 +65,8 @@
     <string name="premium_subscribe_processing">Обробка…</string>
     <string name="premium_restore_purchases">Відновити покупки</string>
     <string name="premium_active_status">Ваша Premium підписка активна</string>
+    <string name="premium_next_billing_label">Наступне списання</string>
+    <string name="premium_valid_until_label">Підписка діє до</string>
     <string name="premium_manage_subscription">Керувати підпискою</string>
     <string name="premium_error_billing_not_ready">Оплата ще не готова. Спробуйте ще раз за мить.</string>
     <string name="premium_error_launch_failed">Не вдалося почати покупку. Спробуйте ще раз.</string>

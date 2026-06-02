@@ -13,6 +13,7 @@ class PremiumViewModel(
 ) : ViewModel() {
 
     val isPremiumActive = premiumRepository.isPremiumActive
+    val subscriptionInfo = premiumRepository.subscriptionInfo
     val catalog = premiumRepository.catalog
     val isBillingReady = premiumRepository.isBillingReady
     val purchaseError = premiumRepository.purchaseError
@@ -23,6 +24,7 @@ class PremiumViewModel(
 
     init {
         premiumRepository.loadProducts()
+        premiumRepository.refreshPurchases()
     }
 
     fun selectPlan(plan: PremiumPlan) {

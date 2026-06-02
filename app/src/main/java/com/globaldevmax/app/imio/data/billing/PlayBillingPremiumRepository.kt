@@ -19,7 +19,9 @@ import com.android.billingclient.api.queryPurchasesAsync
 import com.globaldevmax.app.imio.core.premium.PremiumProductIds
 import com.globaldevmax.app.imio.domain.model.PremiumCatalog
 import com.globaldevmax.app.imio.domain.model.PremiumPlan
+import com.globaldevmax.app.imio.domain.model.PremiumSubscriptionInfo
 import com.globaldevmax.app.imio.domain.repository.PremiumRepository
+import org.json.JSONObject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -36,6 +38,10 @@ class PlayBillingPremiumRepository(
 
     private val _isPremiumActive = MutableStateFlow(false)
     override val isPremiumActive: StateFlow<Boolean> = _isPremiumActive.asStateFlow()
+
+    private val _subscriptionInfo = MutableStateFlow<PremiumSubscriptionInfo?>(null)
+    override val subscriptionInfo: StateFlow<PremiumSubscriptionInfo?> =
+        _subscriptionInfo.asStateFlow()
 
     private val _catalog = MutableStateFlow<PremiumCatalog?>(null)
     override val catalog: StateFlow<PremiumCatalog?> = _catalog.asStateFlow()
@@ -94,11 +100,12 @@ class PlayBillingPremiumRepository(
             if (!client.isReady) return@launch
 
             val purchases = querySubscriptionPurchases(client)
-            val hasActivePremium = purchases.any { purchase ->
+            val premiumPurchase = purchases.firstOrNull { purchase ->
                 purchase.purchaseState == Purchase.PurchaseState.PURCHASED &&
                     purchase.products.contains(PremiumProductIds.SUBSCRIPTION_ID)
             }
-            _isPremiumActive.value = hasActivePremium
+            _isPremiumActive.value = premiumPurchase != null
+            _subscriptionInfo.value = premiumPurchase?.toPremiumSubscriptionInfo()
 
             purchases.forEach { purchase ->
                 if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED && !purchase.isAcknowledged) {
@@ -238,6 +245,15 @@ class PlayBillingPremiumRepository(
             .setPurchaseToken(purchase.purchaseToken)
             .build()
         client.acknowledgePurchase(params)
+    }
+
+    private fun Purchase.toPremiumSubscriptionInfo(): PremiumSubscriptionInfo? {
+        val expiryMillis = JSONObject(originalJson).optLong("expiryTimeMillis", 0L)
+        if (expiryMillis <= 0L) return null
+        return PremiumSubscriptionInfo(
+            expiryTimeMillis = expiryMillis,
+            autoRenewing = isAutoRenewing
+        )
     }
 
     private companion object {

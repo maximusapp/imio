@@ -27,8 +27,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.globaldevmax.app.imio.R
+import com.globaldevmax.app.imio.ui.ads.ImioBannerAd
 import com.globaldevmax.app.imio.ui.components.ImioActionButton
-import com.globaldevmax.app.imio.ui.components.ImioBackButton
+import com.globaldevmax.app.imio.ui.components.ImioTopHeader
 import com.globaldevmax.app.imio.ui.components.LottieIcon
 import com.globaldevmax.app.imio.ui.components.ParentVerificationDialog
 
@@ -39,6 +40,7 @@ private val EveningModeActiveGreen = Color(0xFF22C55E)
 fun EveningModeScreen(
     isEveningModeActive: Boolean,
     onEveningModeActiveChange: (Boolean) -> Unit,
+    showAds: Boolean,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -54,28 +56,18 @@ fun EveningModeScreen(
     }
 
     Box(modifier = modifier.fillMaxSize()) {
-        ImioBackButton(
-            onClick = onBackClick,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(start = 8.dp, top = 28.dp)
+        ImioTopHeader(
+            title = stringResource(R.string.evening_mode_title),
+            onBackClick = onBackClick
         )
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 24.dp)
-                .padding(top = 72.dp, bottom = 24.dp),
+                .padding(top = 86.dp, bottom = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = stringResource(R.string.evening_mode_title),
-                color = MaterialTheme.colorScheme.onBackground,
-                fontWeight = FontWeight.Bold,
-                fontSize = 28.sp,
-                textAlign = TextAlign.Center
-            )
-
             Spacer(modifier = Modifier.weight(0.35f))
 
             LottieIcon(
@@ -94,6 +86,15 @@ fun EveningModeScreen(
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(top = 20.dp)
             )
+
+            // Place banner below the main text (and away from back + primary action).
+            Spacer(modifier = Modifier.height(16.dp))
+            ImioBannerAd(
+                adUnitId = stringResource(R.string.ad_unit_evening_mode_banner),
+                showAds = showAds,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(16.dp))
 
             Spacer(modifier = Modifier.weight(1f))
 

@@ -2,9 +2,12 @@ package com.globaldevmax.app.imio.ui.screen.favorite
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.globaldevmax.app.imio.R
 import com.globaldevmax.app.imio.domain.model.Video
+import com.globaldevmax.app.imio.ui.ads.ImioBannerAd
 import com.globaldevmax.app.imio.ui.components.LottieEmptyState
 import com.globaldevmax.app.imio.ui.components.VideoListItem
 import com.globaldevmax.app.imio.ui.screen.home.forEveningMode
@@ -45,6 +49,19 @@ fun FavoriteScreen(
             .fillMaxSize()
             .statusBarsPadding()
     ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 20.dp)
+                .padding(top = 12.dp, bottom = 20.dp)
+        ) {
+            ImioBannerAd(
+                adUnitId = stringResource(R.string.ad_unit_favorite_banner),
+                showAds = !isPremiumSubscriptionActive,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(18.dp))
+
         when (val state = uiState) {
             FavoriteUiState.Empty -> {
                 LottieEmptyState(
@@ -72,40 +89,35 @@ fun FavoriteScreen(
                         fontWeight = FontWeight.Medium,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
-                            .align(Alignment.Center)
                             .fillMaxWidth()
                             .padding(horizontal = 24.dp)
                     )
                 } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(
-                        start = 20.dp,
-                        end = 20.dp,
-                        top = 12.dp,
-                        bottom = 20.dp
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(18.dp)
-                ) {
-                    items(
-                        items = displayedVideos,
-                        key = { video -> video.id }
-                    ) { video ->
-                        VideoListItem(
-                            video = video,
-                            isFavorite = video.id in favoriteIds,
-                            isPremiumSubscriptionActive = isPremiumSubscriptionActive,
-                            onVideoClick = {
-                                if (!video.isPremium || isPremiumSubscriptionActive) {
-                                    onVideoClick(video)
-                                }
-                            },
-                            onFavoriteClick = { viewModel.toggleFavorite(video) }
-                        )
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(bottom = 4.dp),
+                        verticalArrangement = Arrangement.spacedBy(18.dp)
+                    ) {
+                        items(
+                            items = displayedVideos,
+                            key = { video -> video.id }
+                        ) { video ->
+                            VideoListItem(
+                                video = video,
+                                isFavorite = video.id in favoriteIds,
+                                isPremiumSubscriptionActive = isPremiumSubscriptionActive,
+                                onVideoClick = {
+                                    if (!video.isPremium || isPremiumSubscriptionActive) {
+                                        onVideoClick(video)
+                                    }
+                                },
+                                onFavoriteClick = { viewModel.toggleFavorite(video) }
+                            )
+                        }
                     }
                 }
-                }
             }
+        }
         }
     }
 }

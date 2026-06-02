@@ -340,6 +340,7 @@ private fun ImioNavHost(
                 recentMinutes = recentMinutes,
                 onParentModeActiveChange = onParentModeActiveChange,
                 onAllowedMinutesChange = onAllowedMinutesChange,
+                showAds = !isPremiumSubscriptionActive,
                 onBackClick = { navController.popBackStack() }
             )
         }
@@ -347,6 +348,7 @@ private fun ImioNavHost(
             EveningModeScreen(
                 isEveningModeActive = isEveningModeActive,
                 onEveningModeActiveChange = onEveningModeActiveChange,
+                showAds = !isPremiumSubscriptionActive,
                 onBackClick = { navController.popBackStack() }
             )
         }
