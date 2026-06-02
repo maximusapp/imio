@@ -528,7 +528,7 @@ private fun buildPlayerView(
     return PlayerView(context).apply {
         player = viewModel.getOrCreatePlayer(appContext)
         useController = true
-        controllerShowTimeoutMs = 3_000
+        controllerShowTimeoutMs = 10_000
         resizeMode = playerResizeMode(landscapeFullscreen)
         setShowBuffering(PlayerView.SHOW_BUFFERING_WHEN_PLAYING)
         setControllerVisibilityListener(

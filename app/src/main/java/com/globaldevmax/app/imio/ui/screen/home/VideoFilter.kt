@@ -22,6 +22,13 @@ fun List<Video>.filterBySearch(query: String): List<Video> {
     if (trimmedQuery.isEmpty()) return this
 
     return filter { video ->
-        video.title.contains(trimmedQuery, ignoreCase = true)
+        video.title.contains(trimmedQuery, ignoreCase = true) ||
+            video.description.contains(trimmedQuery, ignoreCase = true) ||
+            video.searchKeywords.any { keyword ->
+                keyword.contains(trimmedQuery, ignoreCase = true)
+            } ||
+            video.categories.any { category ->
+                category.contains(trimmedQuery, ignoreCase = true)
+            }
     }
 }

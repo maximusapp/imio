@@ -70,7 +70,18 @@ fun ProfileScreen(
 
     ImioScrollableScreen(
         modifier = modifier,
-        horizontalPadding = 20.dp
+        horizontalPadding = 20.dp,
+        pinFooterInPortrait = true,
+        footer = {
+            Text(
+                text = stringResource(
+                    R.string.profile_footer,
+                    stringResource(R.string.app_name),
+                    BuildConfig.VERSION_NAME
+                ),
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.68f)
+            )
+        }
     ) {
             Spacer(modifier = Modifier.height(20.dp))
             ImioBannerAd(
@@ -109,17 +120,6 @@ fun ProfileScreen(
                 description = stringResource(R.string.profile_privacy_policy_description),
                 onClick = onPrivacyPolicyClick
             )
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Text(
-                text = stringResource(
-                    R.string.profile_footer,
-                    stringResource(R.string.app_name),
-                    BuildConfig.VERSION_NAME
-                ),
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.68f)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
     }
 
 //        Box(

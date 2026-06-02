@@ -98,32 +98,79 @@ fun ImioScrollableTopHeaderScreen(
 fun ImioScrollableScreen(
     modifier: Modifier = Modifier,
     horizontalPadding: Dp = 20.dp,
+    pinFooterInPortrait: Boolean = false,
+    footer: (@Composable () -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     val scrollState = rememberScrollState()
+    val shouldPinFooter = pinFooterInPortrait && !isLandscape && footer != null
+    val horizontalContentPadding = if (isLandscape) 32.dp else horizontalPadding
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .navigationBarsPadding()
-            .padding(horizontal = if (isLandscape) 32.dp else horizontalPadding)
-            .padding(vertical = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    if (shouldPinFooter) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .then(
-                    if (isLandscape) {
-                        Modifier.widthIn(max = 560.dp)
-                    } else {
-                        Modifier
-                    }
-                ),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            content = content
-        )
+            modifier = modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(scrollState)
+                    .padding(horizontal = horizontalContentPadding)
+                    .padding(top = 24.dp, bottom = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .then(
+                            if (isLandscape) {
+                                Modifier.widthIn(max = 560.dp)
+                            } else {
+                                Modifier
+                            }
+                        ),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    content = content
+                )
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = horizontalContentPadding)
+                    .padding(top = 8.dp, bottom = 10.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                footer?.invoke()
+            }
+        }
+    } else {
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .navigationBarsPadding()
+                .padding(horizontal = horizontalContentPadding)
+                .padding(vertical = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .then(
+                        if (isLandscape) {
+                            Modifier.widthIn(max = 560.dp)
+                        } else {
+                            Modifier
+                        }
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                content()
+                footer?.invoke()
+            }
+        }
     }
 }

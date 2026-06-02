@@ -10,6 +10,7 @@ import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.hls.HlsMediaSource
 import com.globaldevmax.app.imio.domain.model.Video
+import com.globaldevmax.app.imio.domain.model.relatedVideosFor
 import com.globaldevmax.app.imio.domain.usecase.GetCachedVideosUseCase
 import com.globaldevmax.app.imio.domain.usecase.GetVideoByIdUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -91,8 +92,8 @@ class VideoViewModel(
     }
 
     private fun updateReadyState(video: Video) {
-        val otherVideos = getCachedVideosUseCase()
-            .filter { cachedVideo -> cachedVideo.id != video.id }
+        val allVideos = getCachedVideosUseCase()
+        val otherVideos = allVideos.relatedVideosFor(video)
 
         _uiState.value = VideoUiState.Ready(
             video = video,
