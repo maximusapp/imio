@@ -3,11 +3,6 @@ package com.globaldevmax.app.imio.ui.screen.video
 import android.app.Activity
 import android.content.res.Configuration
 import android.view.View
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -367,38 +362,35 @@ private fun LandscapeVideoContent(
     onUpdatePlayerView: (PlayerView) -> Unit,
     onReleasePlayerView: (PlayerView) -> Unit
 ) {
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
     ) {
-        VideoPlayerView(
-            onCreatePlayerView = onCreatePlayerView,
-            onUpdatePlayerView = onUpdatePlayerView,
-            onReleasePlayerView = onReleasePlayerView,
-            modifier = Modifier.fillMaxSize()
-        )
-
-        AnimatedVisibility(
-            visible = showPlayerChrome,
-            enter = fadeIn(),
-            exit = fadeOut(),
-            modifier = Modifier.align(Alignment.TopStart)
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
         ) {
-            ImioBackButton(
-                onClick = onBackClick,
-                modifier = Modifier
-                    .statusBarsPadding()
-                    .padding(start = 4.dp, top = 4.dp)
+            VideoPlayerView(
+                onCreatePlayerView = onCreatePlayerView,
+                onUpdatePlayerView = onUpdatePlayerView,
+                onReleasePlayerView = onReleasePlayerView,
+                modifier = Modifier.fillMaxSize()
             )
+
+            if (showPlayerChrome) {
+                ImioBackButton(
+                    onClick = onBackClick,
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .statusBarsPadding()
+                        .padding(start = 4.dp, top = 4.dp)
+                )
+            }
         }
 
-        AnimatedVisibility(
-            visible = showPlayerChrome && otherVideos.isNotEmpty(),
-            enter = expandVertically(expandFrom = Alignment.Bottom),
-            exit = shrinkVertically(shrinkTowards = Alignment.Bottom),
-            modifier = Modifier.align(Alignment.BottomCenter)
-        ) {
+        if (showPlayerChrome && otherVideos.isNotEmpty()) {
             LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
