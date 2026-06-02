@@ -29,6 +29,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import java.util.concurrent.atomic.AtomicBoolean
 class PlayBillingPremiumRepository(
     context: Context
 ) : PremiumRepository, PurchasesUpdatedListener {
@@ -61,6 +64,9 @@ class PlayBillingPremiumRepository(
     private var yearlyOfferToken: String? = null
 
     private var started = false
+    private val productsLoadMutex = Mutex()
+    private val refreshPurchasesMutex = Mutex()
+    private val refreshPurchasesInProgress = AtomicBoolean(false)
 
     override fun start() {
         if (started) return
@@ -95,70 +101,84 @@ class PlayBillingPremiumRepository(
     }
 
     override fun refreshPurchases() {
+        if (!refreshPurchasesInProgress.compareAndSet(false, true)) return
+
         scope.launch {
-            val client = billingClient ?: return@launch
-            if (!client.isReady) return@launch
+            try {
+                refreshPurchasesMutex.withLock {
+                    val client = billingClient ?: return@withLock
+                    if (!client.isReady) return@withLock
 
-            val purchases = querySubscriptionPurchases(client)
-            val premiumPurchase = purchases.firstOrNull { purchase ->
-                purchase.purchaseState == Purchase.PurchaseState.PURCHASED &&
-                    purchase.products.contains(PremiumProductIds.SUBSCRIPTION_ID)
-            }
-            _isPremiumActive.value = premiumPurchase != null
-            _subscriptionInfo.value = premiumPurchase?.toPremiumSubscriptionInfo()
+                    val purchases = querySubscriptionPurchases(client)
+                    val premiumPurchase = purchases.firstOrNull { purchase ->
+                        purchase.purchaseState == Purchase.PurchaseState.PURCHASED &&
+                            purchase.products.contains(PremiumProductIds.SUBSCRIPTION_ID)
+                    }
+                    _isPremiumActive.value = premiumPurchase != null
+                    _subscriptionInfo.value = premiumPurchase?.toPremiumSubscriptionInfo()
 
-            purchases.forEach { purchase ->
-                if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED && !purchase.isAcknowledged) {
-                    acknowledgePurchase(client, purchase)
+                    purchases.forEach { purchase ->
+                        if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED && !purchase.isAcknowledged) {
+                            acknowledgePurchase(client, purchase)
+                        }
+                    }
                 }
+            } finally {
+                refreshPurchasesInProgress.set(false)
             }
         }
     }
 
     override fun loadProducts() {
+        if (_catalog.value != null && subscriptionProductDetails != null) return
+
         scope.launch {
-            val client = billingClient ?: return@launch
-            if (!client.isReady) return@launch
+            productsLoadMutex.withLock {
+                if (_catalog.value != null && subscriptionProductDetails != null) return@withLock
 
-            val productList = listOf(
-                QueryProductDetailsParams.Product.newBuilder()
-                    .setProductId(PremiumProductIds.SUBSCRIPTION_ID)
-                    .setProductType(BillingClient.ProductType.SUBS)
-                    .build()
-            )
-            val params = QueryProductDetailsParams.newBuilder()
-                .setProductList(productList)
-                .build()
+                val client = billingClient ?: return@withLock
+                if (!client.isReady) return@withLock
 
-            val result = client.queryProductDetails(params)
-            if (result.billingResult.responseCode != BillingClient.BillingResponseCode.OK) {
-                return@launch
-            }
-
-            val productDetails = result.productDetailsList?.firstOrNull() ?: return@launch
-            subscriptionProductDetails = productDetails
-
-            val offers = productDetails.subscriptionOfferDetails.orEmpty()
-            val monthlyOffer = offers.firstOrNull { it.basePlanId == PremiumProductIds.BASE_PLAN_MONTHLY }
-            val yearlyOffer = offers.firstOrNull { it.basePlanId == PremiumProductIds.BASE_PLAN_YEARLY }
-
-            monthlyOfferToken = monthlyOffer?.offerToken
-            yearlyOfferToken = yearlyOffer?.offerToken
-
-            val monthlyPrice = monthlyOffer?.pricingPhases
-                ?.pricingPhaseList
-                ?.firstOrNull()
-                ?.formattedPrice
-            val yearlyPrice = yearlyOffer?.pricingPhases
-                ?.pricingPhaseList
-                ?.firstOrNull()
-                ?.formattedPrice
-
-            if (monthlyPrice != null && yearlyPrice != null) {
-                _catalog.value = PremiumCatalog(
-                    monthlyPrice = monthlyPrice,
-                    yearlyPrice = yearlyPrice
+                val productList = listOf(
+                    QueryProductDetailsParams.Product.newBuilder()
+                        .setProductId(PremiumProductIds.SUBSCRIPTION_ID)
+                        .setProductType(BillingClient.ProductType.SUBS)
+                        .build()
                 )
+                val params = QueryProductDetailsParams.newBuilder()
+                    .setProductList(productList)
+                    .build()
+
+                val result = client.queryProductDetails(params)
+                if (result.billingResult.responseCode != BillingClient.BillingResponseCode.OK) {
+                    return@withLock
+                }
+
+                val productDetails = result.productDetailsList?.firstOrNull() ?: return@withLock
+                subscriptionProductDetails = productDetails
+
+                val offers = productDetails.subscriptionOfferDetails.orEmpty()
+                val monthlyOffer = offers.firstOrNull { it.basePlanId == PremiumProductIds.BASE_PLAN_MONTHLY }
+                val yearlyOffer = offers.firstOrNull { it.basePlanId == PremiumProductIds.BASE_PLAN_YEARLY }
+
+                monthlyOfferToken = monthlyOffer?.offerToken
+                yearlyOfferToken = yearlyOffer?.offerToken
+
+                val monthlyPrice = monthlyOffer?.pricingPhases
+                    ?.pricingPhaseList
+                    ?.firstOrNull()
+                    ?.formattedPrice
+                val yearlyPrice = yearlyOffer?.pricingPhases
+                    ?.pricingPhaseList
+                    ?.firstOrNull()
+                    ?.formattedPrice
+
+                if (monthlyPrice != null && yearlyPrice != null) {
+                    _catalog.value = PremiumCatalog(
+                        monthlyPrice = monthlyPrice,
+                        yearlyPrice = yearlyPrice
+                    )
+                }
             }
         }
     }

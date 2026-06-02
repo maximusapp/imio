@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.globaldevmax.app.imio.domain.model.Video
 import com.globaldevmax.app.imio.core.evening.EveningModeStore
+import com.globaldevmax.app.imio.domain.usecase.GetCachedVideosUseCase
 import com.globaldevmax.app.imio.domain.usecase.GetVideosUseCase
 import com.globaldevmax.app.imio.domain.usecase.ObserveFavoriteIdsUseCase
 import com.globaldevmax.app.imio.domain.usecase.ToggleFavoriteUseCase
@@ -18,6 +19,7 @@ import kotlinx.coroutines.launch
 
 class HomeViewModel(
     private val getVideosUseCase: GetVideosUseCase,
+    private val getCachedVideosUseCase: GetCachedVideosUseCase,
     observeFavoriteIdsUseCase: ObserveFavoriteIdsUseCase,
     private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
     private val eveningModeStore: EveningModeStore
@@ -39,7 +41,16 @@ class HomeViewModel(
         )
 
     init {
-        loadVideos()
+        val cachedVideos = getCachedVideosUseCase()
+        if (cachedVideos.isNotEmpty()) {
+            _uiState.value = HomeUiState.Success(
+                allVideos = cachedVideos,
+                selectedFilter = VideoFilter.ALL,
+                isEveningModeActive = isEveningModeActive
+            )
+        } else {
+            loadVideos()
+        }
     }
 
     fun loadVideos() {

@@ -4,6 +4,9 @@ import com.globaldevmax.app.imio.domain.model.Video
 import com.globaldevmax.app.imio.domain.repository.VideoRepository
 import com.globaldevmax.app.imio.network.api.VideosApiService
 import com.globaldevmax.app.imio.network.mapper.toDomain
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class VideoRepositoryImpl(
     private val videosApiService: VideosApiService
@@ -15,12 +18,35 @@ class VideoRepositoryImpl(
     @Volatile
     private var hasShuffledThisSession: Boolean = false
 
+    private val fetchMutex = Mutex()
+    private var inFlightFetch: CompletableDeferred<Result<List<Video>>>? = null
+
     override suspend fun getVideos(): Result<List<Video>> {
-        return runCatching {
+        val (deferred, shouldFetch) = fetchMutex.withLock {
+            val active = inFlightFetch?.takeIf { !it.isCompleted }
+            if (active != null) {
+                active to false
+            } else {
+                CompletableDeferred<Result<List<Video>>>().also { inFlightFetch = it } to true
+            }
+        }
+
+        if (!shouldFetch) {
+            return deferred.await()
+        }
+
+        val result = runCatching {
             val videos = videosApiService.getVideos().videos.map { it.toDomain() }
             updateCachedVideos(videos)
             cachedVideos
         }
+        deferred.complete(result)
+        fetchMutex.withLock {
+            if (inFlightFetch === deferred) {
+                inFlightFetch = null
+            }
+        }
+        return result
     }
 
     override fun getCachedVideos(): List<Video> = cachedVideos

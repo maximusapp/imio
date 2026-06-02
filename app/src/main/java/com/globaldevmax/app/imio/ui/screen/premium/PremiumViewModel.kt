@@ -22,11 +22,6 @@ class PremiumViewModel(
     private val _selectedPlan = MutableStateFlow(PremiumPlan.Yearly)
     val selectedPlan: StateFlow<PremiumPlan> = _selectedPlan.asStateFlow()
 
-    init {
-        premiumRepository.loadProducts()
-        premiumRepository.refreshPurchases()
-    }
-
     fun selectPlan(plan: PremiumPlan) {
         _selectedPlan.value = plan
     }
