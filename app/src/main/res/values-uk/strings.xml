@@ -49,10 +49,17 @@
     <string name="profile_footer">%1$s • v%2$s</string>
     <string name="profile_default_avatar">Стандартний аватар</string>
     <string name="profile_premium_active_badge">Premium активний</string>
+    <string name="profile_premium_badge_label">Premium</string>
+    <string name="profile_premium_feature_hint">Доступно в Imio Premium</string>
+    <string name="premium_feature_badge_title">Imio Premium</string>
+    <string name="premium_feature_parent_mode_message">Обмежуйте, скільки хвилин дитина може дивитися відео. Ця функція входить до Imio Premium.</string>
+    <string name="premium_feature_evening_mode_message">Показуйте лише спокійні колискові відео перед сном. Доступно з Imio Premium.</string>
     <string name="profile_notifications">Сповіщення</string>
     <string name="premium_title">Imio Premium</string>
     <string name="premium_feature_no_ads">Без реклами в Imio</string>
     <string name="premium_feature_more_content">Доступ до Premium контенту</string>
+    <string name="premium_feature_parent_mode">Батьківський режим — обмеження часу перегляду</string>
+    <string name="premium_feature_evening_mode">Вечірній режим — спокійні відео перед сном</string>
     <string name="premium_feature_priority">Пріоритетні оновлення функцій</string>
     <string name="premium_choose_plan">Оберіть план</string>
     <string name="premium_plan_monthly_title">1 місяць</string>

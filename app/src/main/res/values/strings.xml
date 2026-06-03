@@ -59,10 +59,17 @@
     <string name="profile_footer">%1$s • v%2$s</string>
     <string name="profile_default_avatar">Default avatar</string>
     <string name="profile_premium_active_badge">Premium active</string>
+    <string name="profile_premium_badge_label">Premium</string>
+    <string name="profile_premium_feature_hint">Available with Imio Premium</string>
+    <string name="premium_feature_badge_title">Imio Premium</string>
+    <string name="premium_feature_parent_mode_message">Set how many minutes your child can watch videos. This feature is included in Imio Premium.</string>
+    <string name="premium_feature_evening_mode_message">Show only calm bedtime videos to help your child wind down. Unlock with Imio Premium.</string>
     <string name="profile_notifications">Notifications</string>
     <string name="premium_title">Imio Premium</string>
     <string name="premium_feature_no_ads">No ADS in Imio</string>
     <string name="premium_feature_more_content">Access to Premium content</string>
+    <string name="premium_feature_parent_mode">Parent mode — set a daily watch time limit</string>
+    <string name="premium_feature_evening_mode">Evening mode — calm videos before bedtime</string>
     <string name="premium_feature_priority">Priority feature updates</string>
     <string name="premium_choose_plan">Choose a Plan</string>
     <string name="premium_plan_monthly_title">1 Month</string>

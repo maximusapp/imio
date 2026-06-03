@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import com.globaldevmax.app.imio.R
 import com.globaldevmax.app.imio.ui.ads.ImioBannerAd
 import com.globaldevmax.app.imio.ui.components.ImioActionButton
+import com.globaldevmax.app.imio.ui.components.ImioPremiumRequiredBanner
 import com.globaldevmax.app.imio.ui.components.ImioScrollableTopHeaderScreen
 import com.globaldevmax.app.imio.ui.components.LottieIcon
 import com.globaldevmax.app.imio.ui.components.ParentVerificationDialog
@@ -38,12 +39,15 @@ private val EveningModeActiveGreen = Color(0xFF22C55E)
 @Composable
 fun EveningModeScreen(
     isEveningModeActive: Boolean,
+    isPremiumSubscriptionActive: Boolean,
     onEveningModeActiveChange: (Boolean) -> Unit,
+    onGetPremiumClick: () -> Unit,
     showAds: Boolean,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showParentVerification by remember { mutableStateOf(false) }
+    var showPremiumParentVerification by remember { mutableStateOf(false) }
     val isLandscape =
         LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     val lottieHeight = if (isLandscape) 120.dp else 200.dp
@@ -55,6 +59,16 @@ fun EveningModeScreen(
                 onEveningModeActiveChange(false)
             },
             onDismiss = { showParentVerification = false }
+        )
+    }
+
+    if (showPremiumParentVerification) {
+        ParentVerificationDialog(
+            onConfirmed = {
+                showPremiumParentVerification = false
+                onGetPremiumClick()
+            },
+            onDismiss = { showPremiumParentVerification = false }
         )
     }
 
@@ -116,30 +130,54 @@ fun EveningModeScreen(
             }
         }
 
-        ImioActionButton(
-            text = stringResource(
-                if (isEveningModeActive) {
-                    R.string.evening_mode_deactivate
+        if (isPremiumSubscriptionActive) {
+            ImioActionButton(
+                text = stringResource(
+                    if (isEveningModeActive) {
+                        R.string.evening_mode_deactivate
+                    } else {
+                        R.string.evening_mode_activate
+                    }
+                ),
+                onClick = {
+                    if (isEveningModeActive) {
+                        showParentVerification = true
+                    } else {
+                        onEveningModeActiveChange(true)
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp, bottom = 24.dp),
+                width = 320.dp,
+                containerColor = if (isEveningModeActive) {
+                    Color(0xFFEF4444)
                 } else {
-                    R.string.evening_mode_activate
+                    EveningModeActiveGreen
                 }
-            ),
-            onClick = {
-                if (isEveningModeActive) {
-                    showParentVerification = true
-                } else {
-                    onEveningModeActiveChange(true)
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp, bottom = 24.dp),
-            width = 320.dp,
-            containerColor = if (isEveningModeActive) {
-                Color(0xFFEF4444)
-            } else {
-                EveningModeActiveGreen
-            }
-        )
+            )
+        } else if (isEveningModeActive) {
+            ImioActionButton(
+                text = stringResource(R.string.evening_mode_deactivate),
+                onClick = { showParentVerification = true },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp, bottom = 16.dp),
+                width = 320.dp,
+                containerColor = Color(0xFFEF4444)
+            )
+            ImioPremiumRequiredBanner(
+                message = stringResource(R.string.premium_feature_evening_mode_message),
+                onGetPremiumClick = { showPremiumParentVerification = true },
+                modifier = Modifier.padding(bottom = 24.dp)
+            )
+        } else {
+            ImioPremiumRequiredBanner(
+                message = stringResource(R.string.premium_feature_evening_mode_message),
+                onGetPremiumClick = { showPremiumParentVerification = true },
+                modifier = Modifier
+                    .padding(top = 8.dp, bottom = 24.dp)
+            )
+        }
     }
 }

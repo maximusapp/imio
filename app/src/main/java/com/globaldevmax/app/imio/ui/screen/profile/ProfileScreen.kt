@@ -105,16 +105,16 @@ fun ProfileScreen(
                 title = stringResource(R.string.profile_parent_mode),
                 description = stringResource(R.string.profile_parent_mode_description),
                 onClick = onParentModeClick,
-                isHighlighted = isParentModeActive,
-                showActiveIndicator = isParentModeActive
+                isHighlighted = isPremiumSubscriptionActive && isParentModeActive,
+                showActiveIndicator = isPremiumSubscriptionActive && isParentModeActive
             )
             ProfileMenuItem(
                 iconResId = R.drawable.ic_night,
                 title = stringResource(R.string.profile_evening_mode),
                 description = stringResource(R.string.profile_evening_mode_description),
                 onClick = onEveningModeClick,
-                isHighlighted = isEveningModeActive,
-                showActiveIndicator = isEveningModeActive
+                isHighlighted = isPremiumSubscriptionActive && isEveningModeActive,
+                showActiveIndicator = isPremiumSubscriptionActive && isEveningModeActive
             )
             ProfileMenuItem(
                 iconResId = R.drawable.ic_lang,
@@ -252,5 +252,6 @@ private fun ProfileMenuItem(
                     .size(22.dp)
             )
         }
+
     }
 }

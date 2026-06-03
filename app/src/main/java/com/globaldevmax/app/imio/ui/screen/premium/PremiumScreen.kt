@@ -190,6 +190,16 @@ fun PremiumScreen(
                 )
                 PremiumFeatureDivider()
                 PremiumFeature(
+                    iconResId = R.drawable.ic_time,
+                    text = stringResource(R.string.premium_feature_parent_mode)
+                )
+                PremiumFeatureDivider()
+                PremiumFeature(
+                    iconResId = R.drawable.ic_night,
+                    text = stringResource(R.string.premium_feature_evening_mode)
+                )
+                PremiumFeatureDivider()
+                PremiumFeature(
                     iconResId = R.drawable.ic_arrow_circle,
                     text = stringResource(R.string.premium_feature_priority)
                 )

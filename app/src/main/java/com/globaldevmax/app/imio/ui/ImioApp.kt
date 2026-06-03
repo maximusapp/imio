@@ -182,6 +182,7 @@ fun ImioApp() {
                     isParentModeActive = isParentModeActive,
                     allowedMinutes = allowedMinutes,
                     onParentModeActiveChange = { active ->
+                        if (active && !isPremiumSubscriptionActive) return@ImioNavHost
                         if (active) {
                             val endsAtMillis = calculateParentModeEndsAtMillis(allowedMinutes)
                             showSleepDialog = false
@@ -207,6 +208,7 @@ fun ImioApp() {
                     isEveningModeActive = isEveningModeActive,
                     hasActiveNotification = hasActiveNotification,
                     onEveningModeActiveChange = { active ->
+                        if (active && !isPremiumSubscriptionActive) return@ImioNavHost
                         scope.launch {
                             if (active) {
                                 eveningModeStore.activate()
@@ -214,6 +216,9 @@ fun ImioApp() {
                                 eveningModeStore.deactivate()
                             }
                         }
+                    },
+                    onGetPremiumClick = {
+                        navController.navigate(AppRoute.Premium.route)
                     },
                     splashLocaleGateReady = splashLocaleGateReady,
                     splashHasVideoLocale = splashHasVideoLocale,
@@ -281,6 +286,7 @@ private fun ImioNavHost(
     isEveningModeActive: Boolean,
     hasActiveNotification: Boolean,
     onEveningModeActiveChange: (Boolean) -> Unit,
+    onGetPremiumClick: () -> Unit,
     splashLocaleGateReady: Boolean,
     splashHasVideoLocale: Boolean,
     selectedVideoLocale: String?,
@@ -395,8 +401,10 @@ private fun ImioNavHost(
                 isParentModeActive = isParentModeActive,
                 allowedMinutes = allowedMinutes,
                 recentMinutes = recentMinutes,
+                isPremiumSubscriptionActive = isPremiumSubscriptionActive,
                 onParentModeActiveChange = onParentModeActiveChange,
                 onAllowedMinutesChange = onAllowedMinutesChange,
+                onGetPremiumClick = onGetPremiumClick,
                 showAds = !isPremiumSubscriptionActive,
                 onBackClick = { navController.popBackStack() }
             )
@@ -404,7 +412,9 @@ private fun ImioNavHost(
         composable(AppRoute.EveningMode.route) {
             EveningModeScreen(
                 isEveningModeActive = isEveningModeActive,
+                isPremiumSubscriptionActive = isPremiumSubscriptionActive,
                 onEveningModeActiveChange = onEveningModeActiveChange,
+                onGetPremiumClick = onGetPremiumClick,
                 showAds = !isPremiumSubscriptionActive,
                 onBackClick = { navController.popBackStack() }
             )
