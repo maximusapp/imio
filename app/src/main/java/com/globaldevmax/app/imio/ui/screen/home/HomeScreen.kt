@@ -113,7 +113,6 @@ fun HomeScreen(
                     ) {
                         HomeVideoFilterBar(
                             selectedFilter = state.selectedFilter,
-                            filterCounts = state.filterCounts,
                             onFilterSelected = viewModel::onFilterSelected,
                             modifier = Modifier.fillMaxWidth()
                         )

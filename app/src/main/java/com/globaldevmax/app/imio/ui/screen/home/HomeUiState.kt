@@ -20,13 +20,6 @@ sealed interface HomeUiState {
 
         val displayedVideos: List<Video>
             get() = modeFilteredVideos.filterBy(selectedFilter)
-
-        val filterCounts: VideoFilterCounts
-            get() = VideoFilterCounts(
-                all = modeFilteredVideos.size,
-                premium = modeFilteredVideos.count { it.isPremium },
-                standard = modeFilteredVideos.count { !it.isPremium }
-            )
     }
 
     data class Error(
