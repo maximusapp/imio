@@ -100,13 +100,17 @@ fun ImioActionButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     width: Dp = 150.dp,
+    enabled: Boolean = true,
     textStyle: TextStyle = LocalTextStyle.current,
     containerColor: Color = Color(0xFF22C55E),
     contentColor: Color = Color.White
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier.width(width),
+        enabled = enabled,
+        modifier = modifier.then(
+            if (width != Dp.Unspecified) Modifier.width(width) else Modifier
+        ),
         shape = RoundedCornerShape(15.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,

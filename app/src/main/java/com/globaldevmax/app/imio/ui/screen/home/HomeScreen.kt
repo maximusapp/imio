@@ -17,14 +17,9 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -46,29 +41,11 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun HomeScreen(
     isPremiumSubscriptionActive: Boolean,
-    isEveningModeActive: Boolean,
     onVideoClick: (Video) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    LaunchedEffect(isEveningModeActive) {
-        viewModel.setEveningModeActive(isEveningModeActive)
-    }
-
-    val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                viewModel.syncEveningModeFromStore()
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
-    }
 
     val favoriteIds by viewModel.favoriteIds.collectAsStateWithLifecycle()
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
@@ -152,7 +129,7 @@ fun HomeScreen(
                                 item(key = "video_filter_empty") {
                                     Text(
                                         text = stringResource(
-                                            if (isEveningModeActive) {
+                                            if (state.isEveningModeActive) {
                                                 R.string.evening_mode_no_videos
                                             } else {
                                                 R.string.home_filter_empty

@@ -15,6 +15,12 @@ sealed class AppRoute(val route: String) {
     data object ParentMode : AppRoute("parent_mode")
     data object EveningMode : AppRoute("evening_mode")
 
+    data object VideoLocaleSetup : AppRoute("video_locale_setup/{fromProfile}") {
+        const val ARG_FROM_PROFILE = "fromProfile"
+
+        fun createRoute(fromProfile: Boolean): String = "video_locale_setup/$fromProfile"
+    }
+
     data object Video : AppRoute("video/{videoId}") {
         const val ARG_VIDEO_ID = "videoId"
 

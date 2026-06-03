@@ -18,7 +18,6 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,16 +45,12 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun SearchScreen(
     isPremiumSubscriptionActive: Boolean,
-    isEveningModeActive: Boolean,
     onVideoClick: (Video) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SearchViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(isEveningModeActive) {
-        viewModel.setEveningModeActive(isEveningModeActive)
-    }
     val favoriteIds by viewModel.favoriteIds.collectAsStateWithLifecycle()
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val pullToRefreshState = rememberPullToRefreshState()
@@ -63,10 +58,8 @@ fun SearchScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_RESUME -> viewModel.syncEveningModeFromStore()
-                Lifecycle.Event.ON_STOP -> viewModel.clearSearch()
-                else -> { }
+            if (event == Lifecycle.Event.ON_STOP) {
+                viewModel.clearSearch()
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -154,11 +147,11 @@ fun SearchScreen(
                                     Text(
                                         text = stringResource(
                                             when {
-                                                isEveningModeActive && state.isSearchActive ->
+                                                state.isEveningModeActive && state.isSearchActive ->
                                                     R.string.evening_mode_no_videos
                                                 state.isSearchActive ->
                                                     R.string.home_search_empty
-                                                isEveningModeActive ->
+                                                state.isEveningModeActive ->
                                                     R.string.evening_mode_no_videos
                                                 else ->
                                                     R.string.home_search_empty

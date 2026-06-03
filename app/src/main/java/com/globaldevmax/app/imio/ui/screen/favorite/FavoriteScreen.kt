@@ -29,14 +29,12 @@ import com.globaldevmax.app.imio.domain.model.Video
 import com.globaldevmax.app.imio.ui.ads.ImioBannerAd
 import com.globaldevmax.app.imio.ui.components.LottieEmptyState
 import com.globaldevmax.app.imio.ui.components.VideoListItem
-import com.globaldevmax.app.imio.ui.screen.home.forEveningMode
 import com.globaldevmax.app.imio.ui.theme.ImioOnBackground
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun FavoriteScreen(
     isPremiumSubscriptionActive: Boolean,
-    isEveningModeActive: Boolean,
     onVideoClick: (Video) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: FavoriteViewModel = koinViewModel()
@@ -63,27 +61,27 @@ fun FavoriteScreen(
             Spacer(modifier = Modifier.height(18.dp))
 
         when (val state = uiState) {
-            FavoriteUiState.Empty -> {
+            is FavoriteUiState.Empty -> {
                 LottieEmptyState(
                     animationResId = R.raw.cute_tiger,
-                    message = stringResource(R.string.favorite_empty_state),
+                    message = stringResource(
+                        if (state.isEveningModeActive) {
+                            R.string.evening_mode_no_videos
+                        } else {
+                            R.string.favorite_empty_state
+                        }
+                    ),
                     messageTextSize = 20.sp,
                     modifier = Modifier.fillMaxSize()
                 )
             }
 
             is FavoriteUiState.Success -> {
-                val displayedVideos = state.videos.forEveningMode(isEveningModeActive)
+                val displayedVideos = state.videos
 
                 if (displayedVideos.isEmpty()) {
                     Text(
-                        text = stringResource(
-                            if (isEveningModeActive) {
-                                R.string.evening_mode_no_videos
-                            } else {
-                                R.string.favorite_empty_state
-                            }
-                        ),
+                        text = stringResource(R.string.favorite_empty_state),
                         style = MaterialTheme.typography.bodyLarge,
                         color = ImioOnBackground.copy(alpha = 0.88f),
                         fontWeight = FontWeight.Medium,

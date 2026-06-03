@@ -90,6 +90,16 @@
     <string name="privacy_policy_loading">Loading Privacy Policy…</string>
     <string name="profile_evening_mode">Evening mode</string>
     <string name="profile_evening_mode_description">Calm lullaby videos to prepare for sleep</string>
+    <string name="profile_video_language">Video language</string>
+    <string name="profile_video_language_description">Shows videos in %1$s</string>
+    <string name="video_locale_title">Video language</string>
+    <string name="video_locale_description">Choose the language for videos shown in Imio. You can change this later in Profile.</string>
+    <string name="video_locale_description_from_profile">Choose the language for videos shown in Imio.</string>
+    <string name="video_locale_ukrainian">Ukrainian</string>
+    <string name="video_locale_ukrainian_subtitle">Videos and audio in Ukrainian</string>
+    <string name="video_locale_english">English</string>
+    <string name="video_locale_english_subtitle">Videos and audio in English</string>
+    <string name="video_locale_continue">Continue</string>
     <string name="evening_mode_title">Evening mode</string>
     <string name="evening_mode_description">In this mode, only calm lullaby videos are shown to gently prepare your child for sleep.</string>
     <string name="evening_mode_active_hint">To turn off evening mode, a parent verification is required.</string>

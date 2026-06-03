@@ -3,16 +3,18 @@ package com.globaldevmax.app.imio.ui.screen.home
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.globaldevmax.app.imio.domain.model.Video
 import com.globaldevmax.app.imio.core.evening.EveningModeStore
+import com.globaldevmax.app.imio.domain.model.Video
 import com.globaldevmax.app.imio.domain.usecase.GetCachedVideosUseCase
 import com.globaldevmax.app.imio.domain.usecase.GetVideosUseCase
 import com.globaldevmax.app.imio.domain.usecase.ObserveFavoriteIdsUseCase
+import com.globaldevmax.app.imio.domain.usecase.ObservePreferredVideoLocaleUseCase
 import com.globaldevmax.app.imio.domain.usecase.ToggleFavoriteUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -22,7 +24,8 @@ class HomeViewModel(
     private val getCachedVideosUseCase: GetCachedVideosUseCase,
     observeFavoriteIdsUseCase: ObserveFavoriteIdsUseCase,
     private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
-    private val eveningModeStore: EveningModeStore
+    private val eveningModeStore: EveningModeStore,
+    observePreferredVideoLocaleUseCase: ObservePreferredVideoLocaleUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
@@ -31,7 +34,7 @@ class HomeViewModel(
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
-    private var isEveningModeActive = eveningModeStore.isEveningModeActive()
+    private var contentLocale: String = ""
 
     val favoriteIds: StateFlow<Set<String>> = observeFavoriteIdsUseCase()
         .stateIn(
@@ -41,12 +44,27 @@ class HomeViewModel(
         )
 
     init {
+        viewModelScope.launch {
+            eveningModeStore.isActive.collect { isActive ->
+                setEveningModeActive(isActive)
+            }
+        }
+        viewModelScope.launch {
+            observePreferredVideoLocaleUseCase()
+                .filterNotNull()
+                .collect { locale ->
+                    contentLocale = locale
+                    applyContentLocale(locale)
+                }
+        }
+
         val cachedVideos = getCachedVideosUseCase()
         if (cachedVideos.isNotEmpty()) {
             _uiState.value = HomeUiState.Success(
                 allVideos = cachedVideos,
                 selectedFilter = VideoFilter.ALL,
-                isEveningModeActive = isEveningModeActive
+                isEveningModeActive = false,
+                contentLocale = contentLocale
             )
         } else {
             loadVideos()
@@ -71,6 +89,7 @@ class HomeViewModel(
     private suspend fun fetchVideos() {
         val previousState = _uiState.value as? HomeUiState.Success
         val previousFilter = previousState?.selectedFilter ?: VideoFilter.ALL
+        val eveningActive = previousState?.isEveningModeActive ?: false
 
         getVideosUseCase()
             .onSuccess { videos ->
@@ -85,7 +104,8 @@ class HomeViewModel(
                     _uiState.value = HomeUiState.Success(
                         allVideos = videos,
                         selectedFilter = previousFilter,
-                        isEveningModeActive = isEveningModeActive
+                        isEveningModeActive = eveningActive,
+                        contentLocale = contentLocale
                     )
                 }
             }
@@ -108,7 +128,6 @@ class HomeViewModel(
     }
 
     fun setEveningModeActive(isActive: Boolean) {
-        isEveningModeActive = isActive
         _uiState.update { state ->
             if (state is HomeUiState.Success) {
                 state.copy(isEveningModeActive = isActive)
@@ -118,8 +137,13 @@ class HomeViewModel(
         }
     }
 
-    fun syncEveningModeFromStore() {
-        setEveningModeActive(eveningModeStore.isEveningModeActive())
+    private fun applyContentLocale(locale: String) {
+        _uiState.update { state ->
+            when (state) {
+                is HomeUiState.Success -> state.copy(contentLocale = locale)
+                else -> state
+            }
+        }
     }
 
     fun toggleFavorite(video: Video) {

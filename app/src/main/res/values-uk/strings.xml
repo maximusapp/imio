@@ -78,6 +78,16 @@
     <string name="privacy_policy_loading">Завантаження політики конфіденційності…</string>
     <string name="profile_evening_mode">Вечірній режим</string>
     <string name="profile_evening_mode_description">Спокійні колискові відео для підготовки до сну</string>
+    <string name="profile_video_language">Мова відео</string>
+    <string name="profile_video_language_description">Показує відео %1$s</string>
+    <string name="video_locale_title">Мова відео</string>
+    <string name="video_locale_description">Оберіть мову відео в Imio. Пізніше можна змінити в Профілі.</string>
+    <string name="video_locale_description_from_profile">Оберіть мову відео в Imio</string>
+    <string name="video_locale_ukrainian">Українська</string>
+    <string name="video_locale_ukrainian_subtitle">Відео та озвучення українською</string>
+    <string name="video_locale_english">Англійська</string>
+    <string name="video_locale_english_subtitle">Відео та озвучення англійською</string>
+    <string name="video_locale_continue">Далі</string>
     <string name="evening_mode_title">Вечірній режим</string>
     <string name="evening_mode_description">У цьому режимі показуються лише спокійні колискові відео, щоб м’яко підготувати дитину до сну.</string>
     <string name="evening_mode_active_hint">Вимкнути вечірній режим можна лише після батьківської перевірки.</string>

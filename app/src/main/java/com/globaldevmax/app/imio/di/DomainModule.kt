@@ -4,6 +4,7 @@ import com.globaldevmax.app.imio.domain.usecase.GetCachedVideosUseCase
 import com.globaldevmax.app.imio.domain.usecase.GetVideoByIdUseCase
 import com.globaldevmax.app.imio.domain.usecase.GetVideosUseCase
 import com.globaldevmax.app.imio.domain.usecase.ObserveFavoriteIdsUseCase
+import com.globaldevmax.app.imio.domain.usecase.ObservePreferredVideoLocaleUseCase
 import com.globaldevmax.app.imio.domain.usecase.ObserveFavoritesUseCase
 import com.globaldevmax.app.imio.domain.usecase.ToggleFavoriteUseCase
 import org.koin.dsl.module
@@ -15,4 +16,5 @@ val domainModule = module {
     factory { ObserveFavoriteIdsUseCase(get()) }
     factory { ObserveFavoritesUseCase(get()) }
     factory { ToggleFavoriteUseCase(get()) }
+    factory { ObservePreferredVideoLocaleUseCase(get()) }
 }

@@ -1,81 +1,83 @@
 package com.globaldevmax.app.imio.core.parent
 
-import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import com.globaldevmax.app.imio.core.preferences.ImioPreferenceKeys
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
-class ParentModeStore(context: Context) {
-    private val preferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
-
-    fun isParentModeActive(): Boolean = preferences.getBoolean(KEY_IS_ACTIVE, false)
-
-    fun getAllowedMinutes(): String = preferences.getString(KEY_ALLOWED_MINUTES, "").orEmpty()
-
-    fun getEndsAtMillis(): Long = preferences.getLong(KEY_ENDS_AT_MILLIS, 0L)
-
-    fun isSleepDialogVisible(): Boolean = preferences.getBoolean(KEY_SLEEP_DIALOG_VISIBLE, false)
-
-    fun getRecentMinutes(): List<String> {
-        return preferences.getString(KEY_RECENT_MINUTES, "").orEmpty()
-            .split(RECENT_MINUTES_SEPARATOR)
-            .map(String::trim)
-            .filter(String::isNotEmpty)
+class ParentModeStore(
+    private val dataStore: DataStore<Preferences>
+) {
+    val state: Flow<ParentModeState> = dataStore.data.map { preferences ->
+        ParentModeState(
+            isActive = preferences[ImioPreferenceKeys.PARENT_MODE_IS_ACTIVE] ?: false,
+            allowedMinutes = preferences[ImioPreferenceKeys.PARENT_MODE_ALLOWED_MINUTES].orEmpty(),
+            endsAtMillis = preferences[ImioPreferenceKeys.PARENT_MODE_ENDS_AT_MILLIS] ?: 0L,
+            sleepDialogVisible = preferences[ImioPreferenceKeys.PARENT_MODE_SLEEP_DIALOG_VISIBLE] ?: false,
+            recentMinutes = preferences[ImioPreferenceKeys.PARENT_MODE_RECENT_MINUTES].orEmpty()
+                .split(RECENT_MINUTES_SEPARATOR)
+                .map(String::trim)
+                .filter(String::isNotEmpty)
+        )
     }
 
-    fun saveAllowedMinutes(minutes: String) {
-        preferences.edit()
-            .putString(KEY_ALLOWED_MINUTES, minutes)
-            .apply()
+    suspend fun saveAllowedMinutes(minutes: String) {
+        dataStore.edit { preferences ->
+            preferences[ImioPreferenceKeys.PARENT_MODE_ALLOWED_MINUTES] = minutes
+        }
     }
 
-    fun saveRecentMinute(minutes: String) {
+    suspend fun saveRecentMinute(minutes: String) {
         if (minutes.toLongOrNull() == null) return
 
-        val recentMinutes = (listOf(minutes) + getRecentMinutes())
-            .distinct()
-            .take(MAX_RECENT_MINUTES)
-            .joinToString(RECENT_MINUTES_SEPARATOR)
+        dataStore.edit { preferences ->
+            val currentRecent = preferences[ImioPreferenceKeys.PARENT_MODE_RECENT_MINUTES].orEmpty()
+                .split(RECENT_MINUTES_SEPARATOR)
+                .map(String::trim)
+                .filter(String::isNotEmpty)
 
-        preferences.edit()
-            .putString(KEY_RECENT_MINUTES, recentMinutes)
-            .apply()
+            val recentMinutes = (listOf(minutes) + currentRecent)
+                .distinct()
+                .take(MAX_RECENT_MINUTES)
+                .joinToString(RECENT_MINUTES_SEPARATOR)
+
+            preferences[ImioPreferenceKeys.PARENT_MODE_RECENT_MINUTES] = recentMinutes
+        }
     }
 
-    fun activate(allowedMinutes: String, endsAtMillis: Long) {
-        preferences.edit()
-            .putBoolean(KEY_IS_ACTIVE, true)
-            .putString(KEY_ALLOWED_MINUTES, allowedMinutes)
-            .putLong(KEY_ENDS_AT_MILLIS, endsAtMillis)
-            .putBoolean(KEY_SLEEP_DIALOG_VISIBLE, false)
-            .apply()
+    suspend fun activate(allowedMinutes: String, endsAtMillis: Long) {
+        dataStore.edit { preferences ->
+            preferences[ImioPreferenceKeys.PARENT_MODE_IS_ACTIVE] = true
+            preferences[ImioPreferenceKeys.PARENT_MODE_ALLOWED_MINUTES] = allowedMinutes
+            preferences[ImioPreferenceKeys.PARENT_MODE_ENDS_AT_MILLIS] = endsAtMillis
+            preferences[ImioPreferenceKeys.PARENT_MODE_SLEEP_DIALOG_VISIBLE] = false
+        }
     }
 
-    fun updateEndsAtMillis(endsAtMillis: Long) {
-        preferences.edit()
-            .putLong(KEY_ENDS_AT_MILLIS, endsAtMillis)
-            .putBoolean(KEY_SLEEP_DIALOG_VISIBLE, false)
-            .apply()
+    suspend fun updateEndsAtMillis(endsAtMillis: Long) {
+        dataStore.edit { preferences ->
+            preferences[ImioPreferenceKeys.PARENT_MODE_ENDS_AT_MILLIS] = endsAtMillis
+            preferences[ImioPreferenceKeys.PARENT_MODE_SLEEP_DIALOG_VISIBLE] = false
+        }
     }
 
-    fun showSleepDialog() {
-        preferences.edit()
-            .putBoolean(KEY_SLEEP_DIALOG_VISIBLE, true)
-            .apply()
+    suspend fun showSleepDialog() {
+        dataStore.edit { preferences ->
+            preferences[ImioPreferenceKeys.PARENT_MODE_SLEEP_DIALOG_VISIBLE] = true
+        }
     }
 
-    fun deactivate() {
-        preferences.edit()
-            .putBoolean(KEY_IS_ACTIVE, false)
-            .putLong(KEY_ENDS_AT_MILLIS, 0L)
-            .putBoolean(KEY_SLEEP_DIALOG_VISIBLE, false)
-            .apply()
+    suspend fun deactivate() {
+        dataStore.edit { preferences ->
+            preferences[ImioPreferenceKeys.PARENT_MODE_IS_ACTIVE] = false
+            preferences[ImioPreferenceKeys.PARENT_MODE_ENDS_AT_MILLIS] = 0L
+            preferences[ImioPreferenceKeys.PARENT_MODE_SLEEP_DIALOG_VISIBLE] = false
+        }
     }
 
     private companion object {
-        const val PREFERENCES_NAME = "parent_mode"
-        const val KEY_IS_ACTIVE = "is_active"
-        const val KEY_ALLOWED_MINUTES = "allowed_minutes"
-        const val KEY_ENDS_AT_MILLIS = "ends_at_millis"
-        const val KEY_SLEEP_DIALOG_VISIBLE = "sleep_dialog_visible"
-        const val KEY_RECENT_MINUTES = "recent_minutes"
         const val RECENT_MINUTES_SEPARATOR = ","
         const val MAX_RECENT_MINUTES = 5
     }

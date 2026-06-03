@@ -8,11 +8,13 @@ import com.globaldevmax.app.imio.domain.model.Video
 import com.globaldevmax.app.imio.domain.usecase.GetCachedVideosUseCase
 import com.globaldevmax.app.imio.domain.usecase.GetVideosUseCase
 import com.globaldevmax.app.imio.domain.usecase.ObserveFavoriteIdsUseCase
+import com.globaldevmax.app.imio.domain.usecase.ObservePreferredVideoLocaleUseCase
 import com.globaldevmax.app.imio.domain.usecase.ToggleFavoriteUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -22,7 +24,8 @@ class SearchViewModel(
     private val getCachedVideosUseCase: GetCachedVideosUseCase,
     observeFavoriteIdsUseCase: ObserveFavoriteIdsUseCase,
     private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
-    private val eveningModeStore: EveningModeStore
+    private val eveningModeStore: EveningModeStore,
+    observePreferredVideoLocaleUseCase: ObservePreferredVideoLocaleUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<SearchUiState>(SearchUiState.Loading)
@@ -31,7 +34,7 @@ class SearchViewModel(
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
-    private var isEveningModeActive = eveningModeStore.isEveningModeActive()
+    private var contentLocale: String = ""
 
     val favoriteIds: StateFlow<Set<String>> = observeFavoriteIdsUseCase()
         .stateIn(
@@ -41,11 +44,25 @@ class SearchViewModel(
         )
 
     init {
+        viewModelScope.launch {
+            eveningModeStore.isActive.collect { isActive ->
+                setEveningModeActive(isActive)
+            }
+        }
+        viewModelScope.launch {
+            observePreferredVideoLocaleUseCase()
+                .filterNotNull()
+                .collect { locale ->
+                    contentLocale = locale
+                    applyContentLocale(locale)
+                }
+        }
+
         val cachedVideos = getCachedVideosUseCase()
         if (cachedVideos.isNotEmpty()) {
             _uiState.value = SearchUiState.Ready(
                 allVideos = cachedVideos,
-                isEveningModeActive = isEveningModeActive
+                contentLocale = contentLocale
             )
         } else {
             loadVideos()
@@ -82,7 +99,6 @@ class SearchViewModel(
     }
 
     fun setEveningModeActive(isActive: Boolean) {
-        isEveningModeActive = isActive
         _uiState.update { state ->
             if (state is SearchUiState.Ready) {
                 state.copy(isEveningModeActive = isActive)
@@ -92,8 +108,13 @@ class SearchViewModel(
         }
     }
 
-    fun syncEveningModeFromStore() {
-        setEveningModeActive(eveningModeStore.isEveningModeActive())
+    private fun applyContentLocale(locale: String) {
+        _uiState.update { state ->
+            when (state) {
+                is SearchUiState.Ready -> state.copy(contentLocale = locale)
+                else -> state
+            }
+        }
     }
 
     fun toggleFavorite(video: Video) {
@@ -105,6 +126,7 @@ class SearchViewModel(
     private suspend fun fetchVideos() {
         val previousState = _uiState.value as? SearchUiState.Ready
         val previousSearchQuery = previousState?.searchQuery.orEmpty()
+        val eveningActive = previousState?.isEveningModeActive ?: false
 
         getVideosUseCase()
             .onSuccess { videos ->
@@ -112,7 +134,7 @@ class SearchViewModel(
                 applyVideos(
                     videos = videos,
                     searchQuery = previousSearchQuery,
-                    isEveningModeActive = isEveningModeActive
+                    isEveningModeActive = eveningActive
                 )
             }
             .onFailure { error ->
@@ -122,7 +144,7 @@ class SearchViewModel(
                     applyVideos(
                         videos = cachedVideos,
                         searchQuery = previousSearchQuery,
-                        isEveningModeActive = isEveningModeActive
+                        isEveningModeActive = eveningActive
                     )
                 } else {
                     _uiState.value = SearchUiState.Error(message = error.message.orEmpty())
@@ -141,7 +163,8 @@ class SearchViewModel(
             _uiState.value = SearchUiState.Ready(
                 allVideos = videos,
                 searchQuery = searchQuery,
-                isEveningModeActive = isEveningModeActive
+                isEveningModeActive = isEveningModeActive,
+                contentLocale = contentLocale
             )
         }
     }

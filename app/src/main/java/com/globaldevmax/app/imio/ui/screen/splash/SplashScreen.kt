@@ -32,15 +32,20 @@ import com.globaldevmax.app.imio.ui.components.ImioGradientLinearLoader
 fun SplashScreen(
     connectivityChecker: ConnectivityChecker,
     onInternetAvailable: () -> Unit,
+    canProceed: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     var isChecking by remember { mutableStateOf(true) }
     var hasConnectionError by remember { mutableStateOf(false) }
     var retryKey by remember { mutableIntStateOf(0) }
 
-    LaunchedEffect(retryKey) {
+    LaunchedEffect(retryKey, canProceed) {
         isChecking = true
         hasConnectionError = false
+
+        if (!canProceed) {
+            return@LaunchedEffect
+        }
 
         if (connectivityChecker.hasInternetConnection()) {
             onInternetAvailable()

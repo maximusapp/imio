@@ -2,6 +2,7 @@ package com.globaldevmax.app.imio.ui.screen.search
 
 import com.globaldevmax.app.imio.domain.model.Video
 import com.globaldevmax.app.imio.ui.screen.home.filterBySearch
+import com.globaldevmax.app.imio.ui.screen.home.forContentLocale
 import com.globaldevmax.app.imio.ui.screen.home.forEveningMode
 
 sealed interface SearchUiState {
@@ -12,10 +13,12 @@ sealed interface SearchUiState {
     data class Ready(
         val allVideos: List<Video>,
         val searchQuery: String = "",
-        val isEveningModeActive: Boolean = false
+        val isEveningModeActive: Boolean = false,
+        val contentLocale: String = ""
     ) : SearchUiState {
         val displayedVideos: List<Video>
             get() = allVideos
+                .forContentLocale(contentLocale)
                 .filterBySearch(searchQuery)
                 .forEveningMode(isEveningModeActive)
 

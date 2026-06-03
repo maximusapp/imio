@@ -13,6 +13,9 @@ import com.globaldevmax.app.imio.domain.model.Video
 import com.globaldevmax.app.imio.domain.model.relatedVideosFor
 import com.globaldevmax.app.imio.domain.usecase.GetCachedVideosUseCase
 import com.globaldevmax.app.imio.domain.usecase.GetVideoByIdUseCase
+import com.globaldevmax.app.imio.domain.usecase.ObservePreferredVideoLocaleUseCase
+import com.globaldevmax.app.imio.ui.screen.home.forContentLocale
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,11 +27,14 @@ class VideoViewModel(
     private val videoId: String,
     private val getVideoByIdUseCase: GetVideoByIdUseCase,
     private val getCachedVideosUseCase: GetCachedVideosUseCase,
+    observePreferredVideoLocaleUseCase: ObservePreferredVideoLocaleUseCase,
     okHttpClient: OkHttpClient
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<VideoUiState>(VideoUiState.Loading)
     val uiState: StateFlow<VideoUiState> = _uiState.asStateFlow()
+
+    private var contentLocale: String = ""
 
     private val dataSourceFactory = OkHttpDataSource.Factory(okHttpClient)
         .setUserAgent(USER_AGENT)
@@ -36,6 +42,14 @@ class VideoViewModel(
     private var exoPlayer: ExoPlayer? = null
 
     init {
+        viewModelScope.launch {
+            observePreferredVideoLocaleUseCase()
+                .filterNotNull()
+                .collect { locale ->
+                    contentLocale = locale
+                    (_uiState.value as? VideoUiState.Ready)?.video?.let { updateReadyState(it) }
+                }
+        }
         viewModelScope.launch {
             loadVideo(videoId)
         }
@@ -92,7 +106,7 @@ class VideoViewModel(
     }
 
     private fun updateReadyState(video: Video) {
-        val allVideos = getCachedVideosUseCase()
+        val allVideos = getCachedVideosUseCase().forContentLocale(contentLocale)
         val otherVideos = allVideos.relatedVideosFor(video)
 
         _uiState.value = VideoUiState.Ready(

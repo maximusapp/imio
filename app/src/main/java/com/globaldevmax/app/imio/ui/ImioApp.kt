@@ -24,6 +24,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -47,7 +48,9 @@ import androidx.navigation.navArgument
 import com.globaldevmax.app.imio.R
 import com.globaldevmax.app.imio.network.connectivity.ConnectivityChecker
 import com.globaldevmax.app.imio.core.evening.EveningModeStore
+import com.globaldevmax.app.imio.core.locale.VideoLocaleStore
 import com.globaldevmax.app.imio.core.parent.ParentModeStore
+import com.globaldevmax.app.imio.core.parent.ParentModeState
 import com.globaldevmax.app.imio.domain.repository.PremiumRepository
 import com.globaldevmax.app.imio.ui.components.ParentVerificationDialog
 import com.globaldevmax.app.imio.ui.navigation.AppRoute
@@ -62,12 +65,15 @@ import com.globaldevmax.app.imio.ui.screen.privacy.PrivacyPolicyScreen
 import com.globaldevmax.app.imio.ui.screen.profile.ProfileScreen
 import com.globaldevmax.app.imio.ui.screen.splash.SplashScreen
 import com.globaldevmax.app.imio.ui.screen.video.VideoScreen
+import com.globaldevmax.app.imio.ui.screen.videolocale.VideoLocaleSetupScreen
 import com.globaldevmax.app.imio.ui.theme.FredokaFontFamily
 import com.globaldevmax.app.imio.ui.theme.ImioGradientBottom
 import com.globaldevmax.app.imio.ui.theme.ImioGradientTop
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.compose.koinInject
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 @Composable
 fun ImioApp() {
@@ -75,27 +81,40 @@ fun ImioApp() {
     val connectivityChecker = koinInject<ConnectivityChecker>()
     val parentModeStore = koinInject<ParentModeStore>()
     val eveningModeStore = koinInject<EveningModeStore>()
+    val videoLocaleStore = koinInject<VideoLocaleStore>()
     val premiumRepository = koinInject<PremiumRepository>()
+    val scope = rememberCoroutineScope()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
     val shouldShowBottomBar = currentDestination?.route in bottomNavDestinations.map { it.route.route }
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
-    var isParentModeActive by remember { mutableStateOf(parentModeStore.isParentModeActive()) }
-    var allowedMinutes by remember { mutableStateOf(parentModeStore.getAllowedMinutes()) }
-    var recentMinutes by remember { mutableStateOf(parentModeStore.getRecentMinutes()) }
-    var parentModeEndsAtMillis by remember { mutableStateOf(parentModeStore.getEndsAtMillis()) }
-    var showSleepDialog by remember {
+    val parentModeState by parentModeStore.state.collectAsStateWithLifecycle(
+        initialValue = ParentModeState()
+    )
+    val isParentModeActive = parentModeState.isActive
+    val allowedMinutes = parentModeState.allowedMinutes
+    val recentMinutes = parentModeState.recentMinutes
+    val parentModeEndsAtMillis = parentModeState.endsAtMillis
+    var showSleepDialog by remember(parentModeState) {
         mutableStateOf(
-            parentModeStore.isSleepDialogVisible() ||
-                (parentModeStore.isParentModeActive() &&
-                    parentModeStore.getEndsAtMillis() > 0L &&
-                    parentModeStore.getEndsAtMillis() <= System.currentTimeMillis())
+            parentModeState.sleepDialogVisible ||
+                (parentModeState.isActive &&
+                    parentModeState.endsAtMillis > 0L &&
+                    parentModeState.endsAtMillis <= System.currentTimeMillis())
         )
     }
     var showParentChallenge by remember { mutableStateOf(false) }
     val isPremiumSubscriptionActive by premiumRepository.isPremiumActive.collectAsStateWithLifecycle()
-    var isEveningModeActive by remember { mutableStateOf(eveningModeStore.isEveningModeActive()) }
+    val isEveningModeActive by eveningModeStore.isActive.collectAsStateWithLifecycle(initialValue = false)
+    val selectedVideoLocale by videoLocaleStore.preferredVideoLocale.collectAsStateWithLifecycle(initialValue = null)
     var hasActiveNotification by remember { mutableStateOf(false) }
+    var splashLocaleGateReady by remember { mutableStateOf(false) }
+    var splashHasVideoLocale by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        splashHasVideoLocale = videoLocaleStore.hasSelectedVideoLocale.first()
+        splashLocaleGateReady = true
+    }
 
     LaunchedEffect(Unit) {
         premiumRepository.start()
@@ -105,7 +124,6 @@ fun ImioApp() {
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                isEveningModeActive = eveningModeStore.isEveningModeActive()
                 premiumRepository.refreshPurchases()
             }
         }
@@ -134,7 +152,7 @@ fun ImioApp() {
 
             if (isParentModeActive) {
                 showSleepDialog = true
-                parentModeStore.showSleepDialog()
+                scope.launch { parentModeStore.showSleepDialog() }
             }
         }
     }
@@ -165,39 +183,41 @@ fun ImioApp() {
                     allowedMinutes = allowedMinutes,
                     onParentModeActiveChange = { active ->
                         if (active) {
-                            isParentModeActive = true
                             val endsAtMillis = calculateParentModeEndsAtMillis(allowedMinutes)
-                            parentModeEndsAtMillis = endsAtMillis
                             showSleepDialog = false
-                            parentModeStore.activate(allowedMinutes, endsAtMillis)
-                            parentModeStore.saveRecentMinute(allowedMinutes)
-                            recentMinutes = parentModeStore.getRecentMinutes()
+                            scope.launch {
+                                parentModeStore.activate(allowedMinutes, endsAtMillis)
+                                parentModeStore.saveRecentMinute(allowedMinutes)
+                            }
                         } else {
                             showParentChallenge = true
                         }
                     },
                     onAllowedMinutesChange = { minutes ->
-                        allowedMinutes = minutes
-                        parentModeStore.saveAllowedMinutes(minutes)
-                        if (isParentModeActive) {
-                            val endsAtMillis = calculateParentModeEndsAtMillis(minutes)
-                            parentModeEndsAtMillis = endsAtMillis
-                            showSleepDialog = false
-                            parentModeStore.updateEndsAtMillis(endsAtMillis)
+                        scope.launch {
+                            parentModeStore.saveAllowedMinutes(minutes)
+                            if (isParentModeActive) {
+                                val endsAtMillis = calculateParentModeEndsAtMillis(minutes)
+                                showSleepDialog = false
+                                parentModeStore.updateEndsAtMillis(endsAtMillis)
+                            }
                         }
                     },
                     isPremiumSubscriptionActive = isPremiumSubscriptionActive,
                     isEveningModeActive = isEveningModeActive,
                     hasActiveNotification = hasActiveNotification,
                     onEveningModeActiveChange = { active ->
-                        if (active) {
-                            eveningModeStore.activate()
-                            isEveningModeActive = true
-                        } else {
-                            eveningModeStore.deactivate()
-                            isEveningModeActive = false
+                        scope.launch {
+                            if (active) {
+                                eveningModeStore.activate()
+                            } else {
+                                eveningModeStore.deactivate()
+                            }
                         }
                     },
+                    splashLocaleGateReady = splashLocaleGateReady,
+                    splashHasVideoLocale = splashHasVideoLocale,
+                    selectedVideoLocale = selectedVideoLocale,
                     recentMinutes = recentMinutes,
                     modifier = Modifier
                         .weight(1f)
@@ -227,11 +247,9 @@ fun ImioApp() {
                     ).random()
                 },
                 onConfirmed = {
-                    isParentModeActive = false
-                    parentModeEndsAtMillis = 0L
                     showSleepDialog = false
                     showParentChallenge = false
-                    parentModeStore.deactivate()
+                    scope.launch { parentModeStore.deactivate() }
                 },
                 onDismiss = { showSleepDialog = false }
             )
@@ -240,11 +258,9 @@ fun ImioApp() {
         if (showParentChallenge) {
             ParentVerificationDialog(
                 onConfirmed = {
-                    isParentModeActive = false
-                    parentModeEndsAtMillis = 0L
                     showSleepDialog = false
                     showParentChallenge = false
-                    parentModeStore.deactivate()
+                    scope.launch { parentModeStore.deactivate() }
                 },
                 onDismiss = { showParentChallenge = false }
             )
@@ -265,6 +281,9 @@ private fun ImioNavHost(
     isEveningModeActive: Boolean,
     hasActiveNotification: Boolean,
     onEveningModeActiveChange: (Boolean) -> Unit,
+    splashLocaleGateReady: Boolean,
+    splashHasVideoLocale: Boolean,
+    selectedVideoLocale: String?,
     recentMinutes: List<String>,
     modifier: Modifier = Modifier
 ) {
@@ -276,8 +295,14 @@ private fun ImioNavHost(
         composable(AppRoute.Splash.route) {
             SplashScreen(
                 connectivityChecker = connectivityChecker,
+                canProceed = splashLocaleGateReady,
                 onInternetAvailable = {
-                    navController.navigate(AppRoute.Home.route) {
+                    val destination = if (splashHasVideoLocale) {
+                        AppRoute.Home.route
+                    } else {
+                        AppRoute.VideoLocaleSetup.createRoute(fromProfile = false)
+                    }
+                    navController.navigate(destination) {
                         popUpTo(AppRoute.Splash.route) {
                             inclusive = true
                         }
@@ -285,10 +310,38 @@ private fun ImioNavHost(
                 }
             )
         }
+        composable(
+            route = AppRoute.VideoLocaleSetup.route,
+            arguments = listOf(
+                navArgument(AppRoute.VideoLocaleSetup.ARG_FROM_PROFILE) {
+                    type = NavType.BoolType
+                }
+            )
+        ) { entry ->
+            val fromProfile = entry.arguments?.getBoolean(AppRoute.VideoLocaleSetup.ARG_FROM_PROFILE) == true
+            VideoLocaleSetupScreen(
+                fromProfile = fromProfile,
+                onContinue = {
+                    if (fromProfile) {
+                        navController.popBackStack()
+                    } else {
+                        navController.navigate(AppRoute.Home.route) {
+                            popUpTo(AppRoute.VideoLocaleSetup.createRoute(fromProfile = false)) {
+                                inclusive = true
+                            }
+                        }
+                    }
+                },
+                onBackClick = if (fromProfile) {
+                    { navController.popBackStack() }
+                } else {
+                    null
+                }
+            )
+        }
         composable(AppRoute.Home.route) {
             HomeScreen(
                 isPremiumSubscriptionActive = isPremiumSubscriptionActive,
-                isEveningModeActive = isEveningModeActive,
                 onVideoClick = { video ->
                     navController.navigate(AppRoute.Video.createRoute(video.id))
                 }
@@ -297,7 +350,6 @@ private fun ImioNavHost(
         composable(AppRoute.Search.route) {
             SearchScreen(
                 isPremiumSubscriptionActive = isPremiumSubscriptionActive,
-                isEveningModeActive = isEveningModeActive,
                 onVideoClick = { video ->
                     navController.navigate(AppRoute.Video.createRoute(video.id))
                 }
@@ -306,7 +358,6 @@ private fun ImioNavHost(
         composable(AppRoute.Favorite.route) {
             FavoriteScreen(
                 isPremiumSubscriptionActive = isPremiumSubscriptionActive,
-                isEveningModeActive = isEveningModeActive,
                 onVideoClick = { video ->
                     navController.navigate(AppRoute.Video.createRoute(video.id))
                 }
@@ -318,6 +369,10 @@ private fun ImioNavHost(
                 onPrivacyPolicyClick = { navController.navigate(AppRoute.PrivacyPolicy.route) },
                 onParentModeClick = { navController.navigate(AppRoute.ParentMode.route) },
                 onEveningModeClick = { navController.navigate(AppRoute.EveningMode.route) },
+                onVideoLanguageClick = {
+                    navController.navigate(AppRoute.VideoLocaleSetup.createRoute(fromProfile = true))
+                },
+                selectedVideoLocale = selectedVideoLocale,
                 isPremiumSubscriptionActive = isPremiumSubscriptionActive,
                 isParentModeActive = isParentModeActive,
                 isEveningModeActive = isEveningModeActive,

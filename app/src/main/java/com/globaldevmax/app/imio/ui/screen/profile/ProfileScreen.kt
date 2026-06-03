@@ -50,6 +50,8 @@ fun ProfileScreen(
     onPrivacyPolicyClick: () -> Unit,
     onParentModeClick: () -> Unit,
     onEveningModeClick: () -> Unit,
+    onVideoLanguageClick: () -> Unit,
+    selectedVideoLocale: String? = null,
     isPremiumSubscriptionActive: Boolean = false,
     isParentModeActive: Boolean = false,
     isEveningModeActive: Boolean = false,
@@ -113,6 +115,19 @@ fun ProfileScreen(
                 onClick = onEveningModeClick,
                 isHighlighted = isEveningModeActive,
                 showActiveIndicator = isEveningModeActive
+            )
+            ProfileMenuItem(
+                iconResId = R.drawable.ic_lang,
+                title = stringResource(R.string.profile_video_language),
+                description = if (selectedVideoLocale != null) {
+                    stringResource(
+                        R.string.profile_video_language_description,
+                        videoLocaleDisplayName(selectedVideoLocale)
+                    )
+                } else {
+                    stringResource(R.string.profile_video_language)
+                },
+                onClick = onVideoLanguageClick
             )
             ProfileMenuItem(
                 iconResId = R.drawable.ic_privacy_policy,

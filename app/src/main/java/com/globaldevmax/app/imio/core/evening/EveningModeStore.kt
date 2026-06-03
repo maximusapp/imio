@@ -1,26 +1,28 @@
 package com.globaldevmax.app.imio.core.evening
 
-import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import com.globaldevmax.app.imio.core.preferences.ImioPreferenceKeys
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
-class EveningModeStore(context: Context) {
-    private val preferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
-
-    fun isEveningModeActive(): Boolean = preferences.getBoolean(KEY_IS_ACTIVE, false)
-
-    fun activate() {
-        preferences.edit()
-            .putBoolean(KEY_IS_ACTIVE, true)
-            .apply()
+class EveningModeStore(
+    private val dataStore: DataStore<Preferences>
+) {
+    val isActive: Flow<Boolean> = dataStore.data.map {
+        it[ImioPreferenceKeys.EVENING_MODE_IS_ACTIVE] ?: false
     }
 
-    fun deactivate() {
-        preferences.edit()
-            .putBoolean(KEY_IS_ACTIVE, false)
-            .apply()
+    suspend fun activate() {
+        dataStore.edit { preferences ->
+            preferences[ImioPreferenceKeys.EVENING_MODE_IS_ACTIVE] = true
+        }
     }
 
-    private companion object {
-        const val PREFERENCES_NAME = "evening_mode"
-        const val KEY_IS_ACTIVE = "is_active"
+    suspend fun deactivate() {
+        dataStore.edit { preferences ->
+            preferences[ImioPreferenceKeys.EVENING_MODE_IS_ACTIVE] = false
+        }
     }
 }
