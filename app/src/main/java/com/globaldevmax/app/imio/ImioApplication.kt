@@ -3,6 +3,7 @@ package com.globaldevmax.app.imio
 import android.app.Application
 import coil3.ImageLoader
 import coil3.SingletonImageLoader
+import coil3.imageDecoderEnabled
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import com.globaldevmax.app.imio.di.appModule
 import com.google.android.gms.ads.MobileAds
@@ -29,6 +30,8 @@ class ImioApplication : Application(), SingletonImageLoader.Factory {
     override fun newImageLoader(context: android.content.Context): ImageLoader {
         val okHttpClient = getKoin().get<OkHttpClient>()
         return ImageLoader.Builder(context)
+            // BitmapFactory decodes some JPEG variants more reliably than ImageDecoder (API 29+).
+            .imageDecoderEnabled(false)
             .components {
                 add(OkHttpNetworkFetcherFactory(okHttpClient))
             }

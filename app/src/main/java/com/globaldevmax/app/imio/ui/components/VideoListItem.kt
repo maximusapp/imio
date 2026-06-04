@@ -1,5 +1,7 @@
 package com.globaldevmax.app.imio.ui.components
 
+import android.util.Log
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -35,7 +37,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil3.compose.AsyncImage
+import coil3.compose.SubcomposeAsyncImage
 import com.globaldevmax.app.imio.R
 import com.globaldevmax.app.imio.domain.model.Video
 import com.globaldevmax.app.imio.ui.theme.ImioGradientBottom
@@ -161,30 +163,41 @@ fun VideoListItem(
                 .clip(imageShape)
         ) {
             if (video.previewImageUrl.isNotBlank()) {
-                AsyncImage(
+                Log.d("previewImageUrl","video.previewImageUrl: ${video.previewImageUrl}")
+                SubcomposeAsyncImage(
                     model = video.previewImageUrl,
                     contentDescription = video.title,
-                    contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxSize()
-                        .alpha(if (isPremiumLocked) 0.55f else 1f)
-                        .background(Color(0xFFE2E8F0))
+                        .background(Color(0xFFE2E8F0)),
+                    loading = {
+                        VideoPreviewPlaceholder(
+                            isPremiumLocked = isPremiumLocked,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    },
+                    error = {
+                        VideoPreviewPlaceholder(
+                            isPremiumLocked = isPremiumLocked,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    },
+                    success = { state ->
+                        Image(
+                            painter = state.painter,
+                            contentDescription = video.title,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .alpha(if (isPremiumLocked) 0.55f else 1f)
+                        )
+                    }
                 )
             } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .alpha(if (isPremiumLocked) 0.55f else 1f)
-                        .background(Color(0xFFE2E8F0)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = stringResource(R.string.home_video_preview_placeholder),
-                        color = Color(0xFF64748B),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
+                VideoPreviewPlaceholder(
+                    isPremiumLocked = isPremiumLocked,
+                    modifier = Modifier.fillMaxSize()
+                )
             }
 
             if (isPremiumLocked) {
@@ -311,6 +324,26 @@ fun VideoListItem(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun VideoPreviewPlaceholder(
+    isPremiumLocked: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .alpha(if (isPremiumLocked) 0.55f else 1f)
+            .background(Color(0xFFE2E8F0)),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = stringResource(R.string.home_video_preview_placeholder),
+            color = Color(0xFF64748B),
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Medium
+        )
     }
 }
 

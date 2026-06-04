@@ -26,7 +26,7 @@ class DigestAuthenticator(
         val algorithm = params["algorithm"] ?: "MD5"
 
         val method = response.request.method
-        val uri = response.request.url.encodedPath
+        val uri = response.request.url.digestUri()
         val nc = nonceCount.incrementAndGet().toString(HEX_RADIX).padStart(8, '0')
         val cnonce = System.nanoTime().toString(HEX_RADIX)
 
@@ -94,4 +94,10 @@ class DigestAuthenticator(
         const val HEX_RADIX = 16
         private val nonceCount = AtomicInteger(0)
     }
+}
+
+private fun okhttp3.HttpUrl.digestUri(): String {
+    val path = encodedPath
+    val query = encodedQuery
+    return if (query != null) "$path?$query" else path
 }

@@ -95,7 +95,7 @@ class HomeViewModel(
             .onSuccess { videos ->
                 Log.d(TAG, "Loaded ${videos.size} video(s) from KeepData")
                 videos.forEach { video ->
-                    Log.d(TAG, "Video: id=${video.id}, title=${video.title}, manifest=${video.manifestUrl}")
+                    Log.d(TAG, "Video: id=${video.id}, title=${video.title}, img=${video.previewImageUrl}, manifest=${video.manifestUrl}")
                 }
 
                 if (videos.isEmpty()) {

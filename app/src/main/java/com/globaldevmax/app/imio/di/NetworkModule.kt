@@ -4,6 +4,8 @@ import com.globaldevmax.app.imio.BuildConfig
 import com.globaldevmax.app.imio.network.api.VideosApiService
 import com.globaldevmax.app.imio.network.auth.DigestAuthenticator
 import com.globaldevmax.app.imio.network.connectivity.ConnectivityChecker
+import com.globaldevmax.app.imio.network.interceptor.KeepDataMediaLoggingInterceptor
+import com.globaldevmax.app.imio.network.interceptor.KeepDataRequestInterceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.android.ext.koin.androidContext
@@ -24,13 +26,27 @@ val networkModule = module {
             }
         }
 
+        val keepDataUsername = BuildConfig.KEEPDATA_USERNAME
+        val keepDataPassword = BuildConfig.KEEPDATA_PASSWORD
+
         OkHttpClient.Builder()
             .authenticator(
                 DigestAuthenticator(
-                    username = BuildConfig.KEEPDATA_USERNAME,
-                    password = BuildConfig.KEEPDATA_PASSWORD
+                    username = keepDataUsername,
+                    password = keepDataPassword
                 )
             )
+            .addInterceptor(
+                KeepDataRequestInterceptor(
+                    username = keepDataUsername,
+                    password = keepDataPassword
+                )
+            )
+            .apply {
+                if (BuildConfig.DEBUG) {
+                    addInterceptor(KeepDataMediaLoggingInterceptor())
+                }
+            }
             .addInterceptor(loggingInterceptor)
             .connectTimeout(NETWORK_TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .readTimeout(NETWORK_TIMEOUT_SECONDS, TimeUnit.SECONDS)
