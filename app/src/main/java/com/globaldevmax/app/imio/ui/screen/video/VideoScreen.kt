@@ -44,6 +44,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.platform.LocalView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.ui.res.painterResource
@@ -55,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
@@ -77,6 +79,7 @@ import org.koin.core.parameter.parametersOf
 
 private val PlayerCardOuterShape = RoundedCornerShape(24.dp)
 private val PlayerCardInnerShape = RoundedCornerShape(22.dp)
+private const val KEEP_SCREEN_ON_LISTENER_TAG_KEY = -262_001
 
 @androidx.annotation.OptIn(UnstableApi::class)
 @Composable
@@ -91,7 +94,12 @@ fun VideoScreen(
     val context = LocalContext.current
     val activity = context as? Activity
     val lifecycleOwner = LocalLifecycleOwner.current
+    val view = LocalView.current
     var isExiting by remember { mutableStateOf(false) }
+
+    DisposableEffect(view) {
+        onDispose { view.keepScreenOn = false }
+    }
 
     DisposableEffect(lifecycleOwner, uiState) {
         if (uiState !is VideoUiState.Ready) {
@@ -525,8 +533,9 @@ private fun buildPlayerView(
     landscapeFullscreen: Boolean,
     onControllerVisibilityChanged: (Boolean) -> Unit
 ): PlayerView {
+    val exoPlayer = viewModel.getOrCreatePlayer(appContext)
     return PlayerView(context).apply {
-        player = viewModel.getOrCreatePlayer(appContext)
+        player = exoPlayer
         useController = true
         controllerShowTimeoutMs = 10_000
         resizeMode = playerResizeMode(landscapeFullscreen)
@@ -536,6 +545,7 @@ private fun buildPlayerView(
                 onControllerVisibilityChanged(visibility == View.VISIBLE)
             }
         )
+        installKeepScreenOnListener(exoPlayer)
         post { hideSettingsButton() }
     }
 }
@@ -558,13 +568,43 @@ private fun bindPlayer(
             onControllerVisibilityChanged(visibility == View.VISIBLE)
         }
     )
+    playerView.installKeepScreenOnListener(player)
     playerView.post { playerView.hideSettingsButton() }
 }
 
 @UnstableApi
 private fun detachPlayerView(playerView: PlayerView) {
+    val player = playerView.player
+    if (player != null) {
+        playerView.removeKeepScreenOnListener(player)
+    } else {
+        playerView.keepScreenOn = false
+    }
     playerView.setControllerVisibilityListener(null as PlayerView.ControllerVisibilityListener?)
     playerView.player = null
+}
+
+@UnstableApi
+private fun PlayerView.installKeepScreenOnListener(player: Player) {
+    removeKeepScreenOnListener(player)
+    val listener = object : Player.Listener {
+        override fun onIsPlayingChanged(isPlaying: Boolean) {
+            keepScreenOn = isPlaying
+        }
+    }
+    setTag(KEEP_SCREEN_ON_LISTENER_TAG_KEY, listener)
+    player.addListener(listener)
+    keepScreenOn = player.isPlaying
+}
+
+@UnstableApi
+private fun PlayerView.removeKeepScreenOnListener(player: Player) {
+    val listener = getTag(KEEP_SCREEN_ON_LISTENER_TAG_KEY) as? Player.Listener
+    if (listener != null) {
+        player.removeListener(listener)
+    }
+    setTag(KEEP_SCREEN_ON_LISTENER_TAG_KEY, null)
+    keepScreenOn = false
 }
 
 private fun PlayerView.hideSettingsButton() {

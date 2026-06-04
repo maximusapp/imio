@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -35,6 +36,7 @@ class HomeViewModel(
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
     private var contentLocale: String = ""
+    private var isEveningModeActive: Boolean = false
 
     val favoriteIds: StateFlow<Set<String>> = observeFavoriteIdsUseCase()
         .stateIn(
@@ -57,17 +59,19 @@ class HomeViewModel(
                     applyContentLocale(locale)
                 }
         }
-
-        val cachedVideos = getCachedVideosUseCase()
-        if (cachedVideos.isNotEmpty()) {
-            _uiState.value = HomeUiState.Success(
-                allVideos = cachedVideos,
-                selectedFilter = VideoFilter.ALL,
-                isEveningModeActive = false,
-                contentLocale = contentLocale
-            )
-        } else {
-            loadVideos()
+        viewModelScope.launch {
+            isEveningModeActive = eveningModeStore.isActive.first()
+            val cachedVideos = getCachedVideosUseCase()
+            if (cachedVideos.isNotEmpty()) {
+                _uiState.value = HomeUiState.Success(
+                    allVideos = cachedVideos,
+                    selectedFilter = VideoFilter.ALL,
+                    isEveningModeActive = isEveningModeActive,
+                    contentLocale = contentLocale
+                )
+            } else {
+                loadVideos()
+            }
         }
     }
 
@@ -89,8 +93,6 @@ class HomeViewModel(
     private suspend fun fetchVideos() {
         val previousState = _uiState.value as? HomeUiState.Success
         val previousFilter = previousState?.selectedFilter ?: VideoFilter.ALL
-        val eveningActive = previousState?.isEveningModeActive ?: false
-
         getVideosUseCase()
             .onSuccess { videos ->
                 Log.d(TAG, "Loaded ${videos.size} video(s) from KeepData")
@@ -104,7 +106,7 @@ class HomeViewModel(
                     _uiState.value = HomeUiState.Success(
                         allVideos = videos,
                         selectedFilter = previousFilter,
-                        isEveningModeActive = eveningActive,
+                        isEveningModeActive = isEveningModeActive,
                         contentLocale = contentLocale
                     )
                 }
@@ -128,6 +130,7 @@ class HomeViewModel(
     }
 
     fun setEveningModeActive(isActive: Boolean) {
+        isEveningModeActive = isActive
         _uiState.update { state ->
             if (state is HomeUiState.Success) {
                 state.copy(isEveningModeActive = isActive)

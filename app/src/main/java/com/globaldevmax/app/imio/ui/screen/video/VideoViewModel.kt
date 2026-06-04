@@ -11,10 +11,12 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.hls.HlsMediaSource
 import com.globaldevmax.app.imio.domain.model.Video
 import com.globaldevmax.app.imio.domain.model.relatedVideosFor
+import com.globaldevmax.app.imio.core.evening.EveningModeStore
 import com.globaldevmax.app.imio.domain.usecase.GetCachedVideosUseCase
 import com.globaldevmax.app.imio.domain.usecase.GetVideoByIdUseCase
 import com.globaldevmax.app.imio.domain.usecase.ObservePreferredVideoLocaleUseCase
 import com.globaldevmax.app.imio.ui.screen.home.forContentLocale
+import com.globaldevmax.app.imio.ui.screen.home.forEveningMode
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,6 +30,7 @@ class VideoViewModel(
     private val getVideoByIdUseCase: GetVideoByIdUseCase,
     private val getCachedVideosUseCase: GetCachedVideosUseCase,
     observePreferredVideoLocaleUseCase: ObservePreferredVideoLocaleUseCase,
+    private val eveningModeStore: EveningModeStore,
     okHttpClient: OkHttpClient
 ) : ViewModel() {
 
@@ -35,6 +38,7 @@ class VideoViewModel(
     val uiState: StateFlow<VideoUiState> = _uiState.asStateFlow()
 
     private var contentLocale: String = ""
+    private var isEveningModeActive: Boolean = false
 
     private val dataSourceFactory = OkHttpDataSource.Factory(okHttpClient)
         .setUserAgent(USER_AGENT)
@@ -42,6 +46,12 @@ class VideoViewModel(
     private var exoPlayer: ExoPlayer? = null
 
     init {
+        viewModelScope.launch {
+            eveningModeStore.isActive.collect { isActive ->
+                isEveningModeActive = isActive
+                (_uiState.value as? VideoUiState.Ready)?.video?.let { updateReadyState(it) }
+            }
+        }
         viewModelScope.launch {
             observePreferredVideoLocaleUseCase()
                 .filterNotNull()
@@ -106,7 +116,9 @@ class VideoViewModel(
     }
 
     private fun updateReadyState(video: Video) {
-        val allVideos = getCachedVideosUseCase().forContentLocale(contentLocale)
+        val allVideos = getCachedVideosUseCase()
+            .forContentLocale(contentLocale)
+            .forEveningMode(isEveningModeActive)
         val otherVideos = allVideos.relatedVideosFor(video)
 
         _uiState.value = VideoUiState.Ready(

@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -35,6 +36,7 @@ class SearchViewModel(
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
     private var contentLocale: String = ""
+    private var isEveningModeActive: Boolean = false
 
     val favoriteIds: StateFlow<Set<String>> = observeFavoriteIdsUseCase()
         .stateIn(
@@ -58,14 +60,18 @@ class SearchViewModel(
                 }
         }
 
-        val cachedVideos = getCachedVideosUseCase()
-        if (cachedVideos.isNotEmpty()) {
-            _uiState.value = SearchUiState.Ready(
-                allVideos = cachedVideos,
-                contentLocale = contentLocale
-            )
-        } else {
-            loadVideos()
+        viewModelScope.launch {
+            isEveningModeActive = eveningModeStore.isActive.first()
+            val cachedVideos = getCachedVideosUseCase()
+            if (cachedVideos.isNotEmpty()) {
+                _uiState.value = SearchUiState.Ready(
+                    allVideos = cachedVideos,
+                    contentLocale = contentLocale,
+                    isEveningModeActive = isEveningModeActive
+                )
+            } else {
+                loadVideos()
+            }
         }
     }
 
@@ -99,6 +105,7 @@ class SearchViewModel(
     }
 
     fun setEveningModeActive(isActive: Boolean) {
+        isEveningModeActive = isActive
         _uiState.update { state ->
             if (state is SearchUiState.Ready) {
                 state.copy(isEveningModeActive = isActive)
@@ -126,15 +133,13 @@ class SearchViewModel(
     private suspend fun fetchVideos() {
         val previousState = _uiState.value as? SearchUiState.Ready
         val previousSearchQuery = previousState?.searchQuery.orEmpty()
-        val eveningActive = previousState?.isEveningModeActive ?: false
-
         getVideosUseCase()
             .onSuccess { videos ->
                 Log.d(TAG, "Loaded ${videos.size} video(s) for search")
                 applyVideos(
                     videos = videos,
                     searchQuery = previousSearchQuery,
-                    isEveningModeActive = eveningActive
+                    isEveningModeActive = isEveningModeActive
                 )
             }
             .onFailure { error ->
@@ -144,7 +149,7 @@ class SearchViewModel(
                     applyVideos(
                         videos = cachedVideos,
                         searchQuery = previousSearchQuery,
-                        isEveningModeActive = eveningActive
+                        isEveningModeActive = isEveningModeActive
                     )
                 } else {
                     _uiState.value = SearchUiState.Error(message = error.message.orEmpty())
