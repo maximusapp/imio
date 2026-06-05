@@ -109,7 +109,7 @@ fun HomeScreen(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(horizontal = 20.dp)
-                            .padding(top = 12.dp, bottom = 20.dp)
+                            .padding(top = 12.dp, bottom = 0.dp)
                     ) {
                         HomeVideoFilterBar(
                             selectedFilter = state.selectedFilter,
@@ -120,7 +120,7 @@ fun HomeScreen(
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(top = 18.dp),
+                                .padding(top = 5.dp),
                             contentPadding = PaddingValues(bottom = 4.dp),
                             verticalArrangement = Arrangement.spacedBy(18.dp)
                         ) {
