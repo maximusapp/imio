@@ -194,8 +194,8 @@
         <div class="app-name">Imio</div>
         <h1>Політика конфіденційності</h1>
         <p class="meta">
-            Останнє оновлення: <span class="placeholder">25.05.2026</span><br>
-            Дата набрання чинності: <span class="placeholder">25.05.2026</span>
+            Останнє оновлення: 02.06.2026<br>
+            Дата набрання чинності: 02.06.2026
         </p>
     </header>
 
@@ -203,7 +203,7 @@
         <h2>1. Вступ</h2>
         <p>
             Ця Політика конфіденційності пояснює, як
-            <strong class="placeholder">GlobalDevMax</strong>
+            <strong>GlobalDevMax</strong>
             збирає, використовує та захищає
             інформацію під час використання мобільного застосунку <strong>Imio</strong>
             на пристроях Android.
@@ -216,9 +216,9 @@
         <h2>2. Хто ми</h2>
         <ul>
             <li><strong>Назва застосунку:</strong> Imio</li>
-            <li><strong>Розробник:</strong> <span class="placeholder">GlobalDevMax</span></li>
-            <li><strong>Контактний email:</strong> <a href="mailto:sportmaxful@email.com" class="placeholder">sportmaxful@email.com</a></li>
-            <li><strong>Вебсайт:</strong> <a href="https://globaldevmax.com/privacy-policy-uk.html" class="placeholder">https://globaldevmax.com/privacy-policy-uk.html</a></li>
+            <li><strong>Розробник:</strong> GlobalDevMax</li>
+            <li><strong>Контактний email:</strong> <a href="mailto:sportmaxful@email.com">sportmaxful@email.com</a></li>
+            <li><strong>Вебсайт:</strong> <a href="https://globaldevmax.com/privacy-policy-uk.html">https://globaldevmax.com/privacy-policy-uk.html</a></li>
             <li><strong>Ідентифікатор пакета:</strong> com.globaldevmax.app.imio</li>
         </ul>
         <p>З питань щодо конфіденційності звертайтеся на вказаний email.</p>
@@ -230,12 +230,13 @@
         </p>
         <ul>
             <li>Ми <strong>не</strong> вимагаємо від дітей створювати обліковий запис або надавати ім’я, email, номер телефону чи адресу для користування Застосунком.</li>
-            <li>Окремі функції (зміна Parent Mode, Evening Mode, Premium або вимкнення обмежень) захищені <strong>батьківською перевіркою</strong> (простий математичний приклад), призначеною для дорослих.</li>
+            <li>Окремі функції (оформлення Premium, зміна мови відео в профілі, вимкнення Parent Mode або Evening Mode) захищені <strong>батьківською перевіркою</strong> (простий математичний приклад), призначеною для дорослих.</li>
+            <li><strong>Parent Mode</strong> та <strong>Evening Mode</strong> доступні лише з активною підпискою <strong>Imio Premium</strong>; без неї ці режими не вмикаються.</li>
             <li>Батьки та опікуни відповідають за нагляд за використанням Застосунку дітьми та за налаштуваннями на рівні пристрою.</li>
         </ul>
         <p>
             Якщо ви вважаєте, що ми отримали персональні дані дитини без належної згоди, напишіть на
-            <a href="mailto:sportmaxful@email.com" class="placeholder">sportmaxful@email.com</a>
+            <a href="mailto:sportmaxful@email.com">sportmaxful@email.com</a>
             — ми вживемо відповідних заходів для їх видалення.
         </p>
 
@@ -243,8 +244,9 @@
 
         <h3>4.1 Інформація, яку ви надаєте</h3>
         <p>Застосунок <strong>не</strong> вимагає реєстрації та <strong>не</strong> збирає персональний профіль користувача.</p>
-        <p>Єдиний можливий ввід:</p>
+        <p>Можливий ввід від вас:</p>
         <ul>
+            <li><strong>Вибір мови відео</strong> (українська або англійська) при першому запуску або в профілі — зберігається <strong>лише на пристрої</strong> для фільтрації каталогу.</li>
             <li><strong>Відповіді на батьківську перевірку</strong> (математичні приклади) — обробляються <strong>лише на вашому пристрої</strong> для доступу до функцій для дорослих; ми <strong>не</strong> зберігаємо і <strong>не</strong> передаємо ці відповіді на наші сервери.</li>
         </ul>
 
@@ -268,13 +270,18 @@
             </tr>
             <tr>
                 <td>Налаштування Evening Mode (увімкнено/вимкнено)</td>
-                <td>Фільтрація «вечірнього» контенту</td>
+                <td>Фільтрація «вечірнього» (колискового) контенту</td>
+            </tr>
+            <tr>
+                <td>Обрана мова відео (українська / англійська)</td>
+                <td>Показ каталогу відео відповідною мовою</td>
             </tr>
             </tbody>
         </table>
         <p>
-            Дані зберігаються в <strong>локальному сховищі</strong> Android (база Room і приватні SharedPreferences).
-            Вони <strong>не</strong> завантажуються в нашу базу облікових записів, оскільки в Застосунку немає входу в акаунт.
+            Дані зберігаються в <strong>локальному сховищі</strong> Android: база <strong>Room</strong> (обране) та
+            <strong>DataStore (Preferences)</strong> (налаштування режимів і мови відео).
+            Вони <strong>не</strong> завантажуються на наші сервери, оскільки в Застосунку немає входу в акаунт.
         </p>
 
         <h3>4.3 Дані, що автоматично виникають під час використання</h3>
@@ -288,14 +295,28 @@
             Ми <strong>свідомо не</strong> збираємо точну геолокацію (GPS), контакти, фото, записи з мікрофона чи SMS через Застосунок.
         </p>
 
-        <h3>4.4 Преміум-підписка (коли доступна)</h3>
+        <h3>4.4 Преміум-підписка (Imio Premium)</h3>
         <p>
             Якщо ви оформлюєте <strong>Imio Premium</strong> через <strong>Google Play</strong>, оплату та керування підпискою обробляє <strong>Google</strong>.
-            Ми не отримуємо повні дані вашої платіжної картки.
+            Ми <strong>не</strong> отримуємо повні дані вашої платіжної картки.
         </p>
         <p>
-            Ми можемо отримувати або зберігати інформацію про статус підписки, необхідну для відкриття Premium-контенту
-            (наприклад, чи активна підписка), як це надає Google Play Billing після підключення цієї функції в Застосунку.
+            Застосунок отримує від Google Play Billing інформацію про статус підписки, необхідну для відкриття Premium-відео,
+            Parent Mode, Evening Mode та приховування реклами (наприклад, чи активна підписка та термін дії).
+            Ці дані використовуються на пристрої для надання відповідних функцій.
+        </p>
+
+        <h3>4.5 Реклама (для користувачів без Premium)</h3>
+        <p>
+            У безкоштовній версії Застосунку показуються <strong>банерні оголошення Google AdMob</strong>
+            (наприклад, на головному екрані, пошуку, обраному, профілі, екранах режимів і під відео).
+            Користувачі з активною підпискою <strong>Imio Premium</strong> рекламу в Застосунку не бачать.
+        </p>
+        <p>
+            Google може збирати та обробляти технічні дані для показу й вимірювання реклами
+            (зокрема рекламний ідентифікатор пристрою, якщо це дозволено налаштуваннями Android).
+            Деталі — у <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">політиці конфіденційності Google</a>
+            та <a href="https://support.google.com/admob/answer/6128543" target="_blank" rel="noopener noreferrer">документації AdMob</a>.
         </p>
 
         <h2>5. Яку інформацію ми не збираємо</h2>
@@ -306,7 +327,7 @@
             <li>точну геолокацію;</li>
             <li>телефонну книгу чи журнал дзвінків;</li>
             <li>дані про здоров’я чи біометрію;</li>
-            <li>рекламні профілі (для Premium передбачено відсутність реклами; у поточній версії немає SDK сторонньої реклами).</li>
+            <li>власні рекламні профілі Imio (ми не створюємо профілі для таргетингу реклами; показ оголошень здійснює Google AdMob згідно зі своїми правилами).</li>
         </ul>
 
         <h2>6. Як ми використовуємо інформацію</h2>
@@ -314,10 +335,12 @@
         <ul>
             <li>перегляду, пошуку та відтворення відео;</li>
             <li>роботи обраного (favorites);</li>
-            <li>застосування Parent Mode та Evening Mode за вашим вибором;</li>
+            <li>застосування Parent Mode та Evening Mode (для підписників Premium);</li>
+            <li>збереження та застосування обраної мови відео;</li>
             <li>перевірки інтернет-з’єднання та показу відповідних повідомлень;</li>
             <li>завантаження прев’ю та потокового відео;</li>
-            <li>надання доступу до Premium після підключення підписок;</li>
+            <li>надання доступу до Premium-контенту та приховування реклами за активної підписки;</li>
+            <li>показу реклами користувачам без Premium (через Google AdMob);</li>
             <li>підвищення надійності та безпеки Застосунку;</li>
             <li>відповіді на ваші звернення в підтримку.</li>
         </ul>
@@ -327,7 +350,8 @@
         <p>Застосунок запитує такі дозволи:</p>
         <ul>
             <li><strong>INTERNET</strong> — завантаження відео, зображень і контенту;</li>
-            <li><strong>ACCESS_NETWORK_STATE</strong> — перевірка наявності мережевого з’єднання.</li>
+            <li><strong>ACCESS_NETWORK_STATE</strong> — перевірка наявності мережевого з’єднання;</li>
+            <li><strong>AD_ID</strong> (рекламний ідентифікатор Google Play Services) — може використовуватися SDK Google AdMob для показу та аналітики реклами; на пристроях з Android 13+ система може обмежувати доступ до цього ідентифікатора.</li>
         </ul>
         <p>Для основних функцій ми <strong>не</strong> запитуємо доступ до камери, мікрофона, контактів чи геолокації.</p>
 
@@ -350,8 +374,12 @@
                 <td>Прев’ю з віддалених URL</td>
             </tr>
             <tr>
-                <td>Google Play</td>
-                <td>Розповсюдження застосунку та (за наявності) покупки й підписки</td>
+                <td>Google Play / Google Play Billing</td>
+                <td>Розповсюдження застосунку, оформлення та перевірка підписки Imio Premium</td>
+            </tr>
+            <tr>
+                <td>Google AdMob</td>
+                <td>Банерна реклама для користувачів без Premium</td>
             </tr>
             <tr>
                 <td>Виробник пристрою / Android</td>
@@ -360,17 +388,17 @@
             </tbody>
         </table>
         <p>
-            Ці сторони можуть обробляти технічні дані (наприклад, IP і журнали запитів) згідно зі своїми політиками.
+            Ці сторони можуть обробляти технічні дані (наприклад, IP-адресу, рекламний ідентифікатор, журнали запитів) згідно зі своїми політиками.
             Політика Google: <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">policies.google.com/privacy</a>
         </p>
         <p>
-            У <strong>поточній</strong> production-збірці ми <strong>не</strong> інтегруємо сторонню аналітику чи рекламу.
-            Якщо це зміниться — оновимо цю Політику.
+            Ми <strong>не</strong> інтегруємо власну аналітику поведінки користувачів (окрім того, що може надавати Google у рамках AdMob).
+            Якщо склад інтеграцій зміниться — оновимо цю Політику.
         </p>
 
         <h2>9. Зберігання даних</h2>
         <ul>
-            <li><strong>Дані на пристрої</strong> (обране, Parent Mode, Evening Mode) залишаються, доки ви не очистите дані застосунку, не видалите його або не скинете налаштування в Застосунку.</li>
+            <li><strong>Дані на пристрої</strong> (обране, Parent Mode, Evening Mode, мова відео) залишаються, доки ви не очистите дані застосунку, не видалите його або не зміните відповідні налаштування в Застосунку.</li>
             <li><strong>Серверні журнали</strong> (якщо є) зберігаються лише стільки, скільки потрібно для безпеки, усунення збоїв і виконання закону, потім видаляються або знеособлюються.</li>
             <li><strong>Листи в підтримку</strong> зберігаються лише стільки, скільки потрібно для обробки звернення.</li>
         </ul>
@@ -399,7 +427,7 @@
         </ul>
         <p>
             Щодо даних, які контролюємо ми, пишіть на
-            <a href="mailto:sportmaxful@email.com" class="placeholder">sportmaxful@email.com</a>.
+            <a href="mailto:sportmaxful@email.com">sportmaxful@email.com</a>.
         </p>
 
         <h2>12. Користувачі з інших країн</h2>
@@ -411,20 +439,20 @@
         <h2>13. Зміни до Політики</h2>
         <p>
             Ми можемо оновлювати цю Політику. Актуальна версія буде на
-            <a href="https://globaldevmax.com/privacy-policy-uk.html" class="placeholder">https://globaldevmax.com/privacy-policy-uk.html</a>
+            <a href="https://globaldevmax.com/privacy-policy-uk.html">https://globaldevmax.com/privacy-policy-uk.html</a>
             з новою датою «Останнє оновлення». Продовження використання Застосунку після змін означає прийняття оновленої Політики.
         </p>
         <p>Про суттєві зміни можемо додатково повідомити в Застосунку.</p>
 
         <h2>14. Контакти</h2>
         <div class="contact-box">
-            <p><strong class="placeholder">GlobalDevMax</strong></p>
-            <p>Email: <a href="mailto:sportmaxful@email.com" class="placeholder">sportmaxful@email.com</a></p>
+            <p><strong>GlobalDevMax</strong></p>
+            <p>Email: <a href="mailto:sportmaxful@email.com">sportmaxful@email.com</a></p>
         </div>
     </main>
 
     <footer>
-        © <span class="placeholder">2026</span> Imio · com.globaldevmax.app.imio
+        © 2026 Imio · com.globaldevmax.app.imio
     </footer>
 </div>
 </body>
