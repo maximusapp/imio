@@ -95,14 +95,7 @@ fun ImioApp() {
     val allowedMinutes = parentModeState.allowedMinutes
     val recentMinutes = parentModeState.recentMinutes
     val parentModeEndsAtMillis = parentModeState.endsAtMillis
-    var showSleepDialog by remember(parentModeState) {
-        mutableStateOf(
-            parentModeState.sleepDialogVisible ||
-                (parentModeState.isActive &&
-                    parentModeState.endsAtMillis > 0L &&
-                    parentModeState.endsAtMillis <= System.currentTimeMillis())
-        )
-    }
+    var showSleepDialog by remember { mutableStateOf(false) }
     var showParentChallenge by remember { mutableStateOf(false) }
     val isPremiumSubscriptionActive by premiumRepository.isPremiumActive.collectAsStateWithLifecycle()
     val isEveningModeActive by eveningModeStore.isActive.collectAsStateWithLifecycle(initialValue = false)
@@ -143,17 +136,28 @@ fun ImioApp() {
         }
     }
 
-    LaunchedEffect(isParentModeActive, parentModeEndsAtMillis, showSleepDialog) {
-        if (isParentModeActive && !showSleepDialog && parentModeEndsAtMillis > 0L) {
-            val remainingMillis = parentModeEndsAtMillis - System.currentTimeMillis()
-            if (remainingMillis > 0L) {
-                delay(remainingMillis)
-            }
+    LaunchedEffect(parentModeState.sleepDialogVisible) {
+        if (parentModeState.sleepDialogVisible) {
+            showSleepDialog = true
+        }
+    }
 
-            if (isParentModeActive) {
-                showSleepDialog = true
-                scope.launch { parentModeStore.showSleepDialog() }
-            }
+    LaunchedEffect(isParentModeActive) {
+        if (!isParentModeActive) {
+            showSleepDialog = false
+        }
+    }
+
+    LaunchedEffect(isParentModeActive, parentModeEndsAtMillis) {
+        if (!isParentModeActive || parentModeEndsAtMillis <= 0L) return@LaunchedEffect
+
+        val remainingMillis = parentModeEndsAtMillis - System.currentTimeMillis()
+        if (remainingMillis > 0L) {
+            delay(remainingMillis)
+        }
+
+        if (isParentModeActive) {
+            parentModeStore.showSleepDialog()
         }
     }
 
@@ -251,12 +255,14 @@ fun ImioApp() {
                         R.raw.ic_lazy_doge_sleeping
                     ).random()
                 },
+                showDismissButton = false,
+                dismissible = false,
                 onConfirmed = {
                     showSleepDialog = false
                     showParentChallenge = false
                     scope.launch { parentModeStore.deactivate() }
                 },
-                onDismiss = { showSleepDialog = false }
+                onDismiss = {}
             )
         }
 

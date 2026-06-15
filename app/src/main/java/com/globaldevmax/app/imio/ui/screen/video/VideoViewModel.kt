@@ -12,6 +12,7 @@ import androidx.media3.exoplayer.hls.HlsMediaSource
 import com.globaldevmax.app.imio.domain.model.Video
 import com.globaldevmax.app.imio.domain.model.relatedVideosFor
 import com.globaldevmax.app.imio.core.evening.EveningModeStore
+import com.globaldevmax.app.imio.core.parent.ParentModeStore
 import com.globaldevmax.app.imio.domain.usecase.GetCachedVideosUseCase
 import com.globaldevmax.app.imio.domain.usecase.GetVideoByIdUseCase
 import com.globaldevmax.app.imio.domain.usecase.ObservePreferredVideoLocaleUseCase
@@ -31,6 +32,7 @@ class VideoViewModel(
     private val getCachedVideosUseCase: GetCachedVideosUseCase,
     observePreferredVideoLocaleUseCase: ObservePreferredVideoLocaleUseCase,
     private val eveningModeStore: EveningModeStore,
+    private val parentModeStore: ParentModeStore,
     okHttpClient: OkHttpClient
 ) : ViewModel() {
 
@@ -44,6 +46,16 @@ class VideoViewModel(
         .setUserAgent(USER_AGENT)
 
     private var exoPlayer: ExoPlayer? = null
+    private var isParentModeBlockingPlayback: Boolean = false
+
+    private fun shouldPauseForParentMode(
+        sleepDialogVisible: Boolean,
+        isActive: Boolean,
+        endsAtMillis: Long
+    ): Boolean {
+        return sleepDialogVisible ||
+            (isActive && endsAtMillis > 0L && endsAtMillis <= System.currentTimeMillis())
+    }
 
     init {
         viewModelScope.launch {
@@ -62,6 +74,19 @@ class VideoViewModel(
         }
         viewModelScope.launch {
             loadVideo(videoId)
+        }
+        viewModelScope.launch {
+            parentModeStore.state.collect { state ->
+                isParentModeBlockingPlayback = shouldPauseForParentMode(
+                    sleepDialogVisible = state.sleepDialogVisible,
+                    isActive = state.isActive,
+                    endsAtMillis = state.endsAtMillis
+                )
+                if (isParentModeBlockingPlayback) {
+                    pausePlayback()
+                    exoPlayer?.playWhenReady = false
+                }
+            }
         }
     }
 
@@ -139,7 +164,7 @@ class VideoViewModel(
 
         player.setMediaSource(mediaSource)
         player.prepare()
-        player.playWhenReady = true
+        player.playWhenReady = !isParentModeBlockingPlayback
         player.repeatMode = Player.REPEAT_MODE_OFF
     }
 

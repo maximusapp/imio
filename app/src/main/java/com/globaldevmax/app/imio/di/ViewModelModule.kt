@@ -24,6 +24,7 @@ val viewModelModule = module {
             getCachedVideosUseCase = get(),
             observePreferredVideoLocaleUseCase = get(),
             eveningModeStore = get(),
+            parentModeStore = get(),
             okHttpClient = get()
         )
     }
