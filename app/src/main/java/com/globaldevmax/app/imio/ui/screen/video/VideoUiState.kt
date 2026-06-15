@@ -7,7 +7,8 @@ sealed interface VideoUiState {
 
     data class Ready(
         val video: Video,
-        val otherVideos: List<Video> = emptyList()
+        val otherVideos: List<Video> = emptyList(),
+        val contentLocale: String = ""
     ) : VideoUiState
 
     data class Error(

@@ -19,7 +19,7 @@ sealed interface SearchUiState {
         val displayedVideos: List<Video>
             get() = allVideos
                 .forContentLocale(contentLocale)
-                .filterBySearch(searchQuery)
+                .filterBySearch(searchQuery, contentLocale)
                 .forEveningMode(isEveningModeActive)
 
         val isSearchActive: Boolean

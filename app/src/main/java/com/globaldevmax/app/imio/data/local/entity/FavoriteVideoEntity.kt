@@ -8,6 +8,7 @@ data class FavoriteVideoEntity(
     @PrimaryKey
     val id: String,
     val title: String,
+    val description: String = "",
     val format: String,
     val manifestUrl: String,
     val durationMs: Long,
@@ -15,5 +16,6 @@ data class FavoriteVideoEntity(
     val locale: String,
     val isPremium: Boolean,
     val isBedtime: Boolean = false,
+    val localizationsJson: String? = null,
     val addedAtMillis: Long
 )

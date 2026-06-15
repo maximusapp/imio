@@ -1,7 +1,9 @@
 package com.globaldevmax.app.imio.network.mapper
 
 import com.globaldevmax.app.imio.domain.model.Video
+import com.globaldevmax.app.imio.domain.model.VideoLocalization
 import com.globaldevmax.app.imio.network.dto.VideoDto
+import com.globaldevmax.app.imio.network.dto.VideoLocalizationDto
 import com.globaldevmax.app.imio.network.sanitizeMediaUrl
 
 fun VideoDto.toDomain(): Video {
@@ -20,8 +22,17 @@ fun VideoDto.toDomain(): Video {
         publishedAt = publishedAt,
         ageMin = ageMin,
         ageMax = ageMax,
-        categories = categories,
-        searchKeywords = searchKeywords,
-        relatedVideoIds = relatedVideoIds
+        categories = categories.orEmpty(),
+        searchKeywords = searchKeywords.orEmpty(),
+        relatedVideoIds = relatedVideoIds.orEmpty(),
+        localizations = localizations.orEmpty().map { it.toDomain() }
+    )
+}
+
+private fun VideoLocalizationDto.toDomain(): VideoLocalization {
+    return VideoLocalization(
+        locale = locale,
+        title = title,
+        description = description.orEmpty()
     )
 }

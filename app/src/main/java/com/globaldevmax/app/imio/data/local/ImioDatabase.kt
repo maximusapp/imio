@@ -7,7 +7,7 @@ import com.globaldevmax.app.imio.data.local.entity.FavoriteVideoEntity
 
 @Database(
     entities = [FavoriteVideoEntity::class],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class ImioDatabase : RoomDatabase() {

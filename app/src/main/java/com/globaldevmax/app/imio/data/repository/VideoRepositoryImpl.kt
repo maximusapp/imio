@@ -36,7 +36,7 @@ class VideoRepositoryImpl(
         }
 
         val result = runCatching {
-            val videos = videosApiService.getVideos().videos.map { it.toDomain() }
+            val videos = videosApiService.getVideos().videos.orEmpty().map { it.toDomain() }
             updateCachedVideos(videos)
             cachedVideos
         }

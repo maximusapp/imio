@@ -6,7 +6,7 @@ data class VideosResponseDto(
     @SerializedName("schema_version")
     val schemaVersion: Int = 1,
     @SerializedName("videos")
-    val videos: List<VideoDto> = emptyList()
+    val videos: List<VideoDto>? = null
 )
 
 data class VideoDto(
@@ -39,9 +39,11 @@ data class VideoDto(
     @SerializedName("age_max")
     val ageMax: Int = 6,
     @SerializedName("categories")
-    val categories: List<String> = emptyList(),
+    val categories: List<String>? = null,
     @SerializedName("search_keywords")
-    val searchKeywords: List<String> = emptyList(),
+    val searchKeywords: List<String>? = null,
     @SerializedName("related_video_ids")
-    val relatedVideoIds: List<String> = emptyList()
+    val relatedVideoIds: List<String>? = null,
+    @SerializedName("localizations")
+    val localizations: List<VideoLocalizationDto>? = null
 )

@@ -104,6 +104,7 @@ fun FavoriteScreen(
                                 video = video,
                                 isFavorite = video.id in favoriteIds,
                                 isPremiumSubscriptionActive = isPremiumSubscriptionActive,
+                                preferredLocale = state.contentLocale,
                                 onVideoClick = {
                                     if (!video.isPremium || isPremiumSubscriptionActive) {
                                         onVideoClick(video)

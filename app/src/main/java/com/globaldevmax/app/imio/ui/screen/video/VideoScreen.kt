@@ -63,6 +63,7 @@ import androidx.media3.ui.PlayerView
 import androidx.media3.ui.R as Media3UiR
 import com.globaldevmax.app.imio.R
 import com.globaldevmax.app.imio.domain.model.Video
+import com.globaldevmax.app.imio.domain.model.displayTitle
 import com.globaldevmax.app.imio.ui.ads.ImioBannerAd
 import com.globaldevmax.app.imio.ui.components.ImioBackButton
 import com.globaldevmax.app.imio.ui.components.ImioLoadingIndicator
@@ -197,6 +198,7 @@ fun VideoScreen(
                     PortraitVideoContent(
                         video = state.video,
                         otherVideos = state.otherVideos,
+                        contentLocale = state.contentLocale,
                         isPremiumSubscriptionActive = isPremiumSubscriptionActive,
                         onBackClick = handleBack,
                         onRelatedVideoClick = viewModel::switchToVideo,
@@ -207,6 +209,7 @@ fun VideoScreen(
                 } else {
                     LandscapeVideoContent(
                         otherVideos = state.otherVideos,
+                        contentLocale = state.contentLocale,
                         isPremiumSubscriptionActive = isPremiumSubscriptionActive,
                         showPlayerChrome = arePlayerControlsVisible,
                         onBackClick = handleBack,
@@ -225,6 +228,7 @@ fun VideoScreen(
 private fun PortraitVideoContent(
     video: Video,
     otherVideos: List<Video>,
+    contentLocale: String,
     isPremiumSubscriptionActive: Boolean,
     onBackClick: () -> Unit,
     onRelatedVideoClick: (Video) -> Unit,
@@ -237,6 +241,7 @@ private fun PortraitVideoContent(
             colors = listOf(ImioGradientBottom, Purple40, Pink, ImioGradientTop)
         )
     }
+    val displayTitle = video.displayTitle(contentLocale)
 
     Column(
         modifier = Modifier
@@ -252,7 +257,7 @@ private fun PortraitVideoContent(
         ) {
             ImioBackButton(onClick = onBackClick)
             Text(
-                text = video.title,
+                text = displayTitle,
                 color = ImioOnBackground,
                 fontWeight = FontWeight.Bold,
                 fontSize = 22.sp,
@@ -309,6 +314,7 @@ private fun PortraitVideoContent(
                         video = relatedVideo,
                         isFavorite = false,
                         isPremiumSubscriptionActive = isPremiumSubscriptionActive,
+                        preferredLocale = contentLocale,
                         onVideoClick = {
                             if (!isPremiumLocked) {
                                 onRelatedVideoClick(relatedVideo)
@@ -362,6 +368,7 @@ private fun VideoPlayerCard(
 @Composable
 private fun LandscapeVideoContent(
     otherVideos: List<Video>,
+    contentLocale: String,
     isPremiumSubscriptionActive: Boolean,
     showPlayerChrome: Boolean,
     onBackClick: () -> Unit,
@@ -415,6 +422,7 @@ private fun LandscapeVideoContent(
                     val isPremiumLocked = relatedVideo.isPremium && !isPremiumSubscriptionActive
                     LandscapeRelatedVideoItem(
                         video = relatedVideo,
+                        contentLocale = contentLocale,
                         isPremiumLocked = isPremiumLocked,
                         onClick = {
                             if (!isPremiumLocked) {
@@ -431,11 +439,13 @@ private fun LandscapeVideoContent(
 @Composable
 private fun LandscapeRelatedVideoItem(
     video: Video,
+    contentLocale: String,
     isPremiumLocked: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val thumbnailShape = RoundedCornerShape(8.dp)
+    val displayTitle = video.displayTitle(contentLocale)
 
     Column(
         modifier = modifier
@@ -458,7 +468,7 @@ private fun LandscapeRelatedVideoItem(
             if (video.previewImageUrl.isNotBlank()) {
                 AsyncImage(
                     model = video.previewImageUrl,
-                    contentDescription = video.title,
+                    contentDescription = displayTitle,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxSize()
@@ -498,7 +508,7 @@ private fun LandscapeRelatedVideoItem(
             }
         }
         Text(
-            text = video.title,
+            text = displayTitle,
             color = Color.White,
             fontWeight = FontWeight.SemiBold,
             fontSize = 12.sp,

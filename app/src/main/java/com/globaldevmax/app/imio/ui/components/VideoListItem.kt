@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.SubcomposeAsyncImage
 import com.globaldevmax.app.imio.R
 import com.globaldevmax.app.imio.domain.model.Video
+import com.globaldevmax.app.imio.domain.model.displayTitle
 import com.globaldevmax.app.imio.ui.theme.ImioGradientBottom
 import com.globaldevmax.app.imio.ui.theme.ImioGradientTop
 import com.globaldevmax.app.imio.ui.theme.ImioOnBackground
@@ -114,10 +115,12 @@ fun VideoListItem(
     onVideoClick: () -> Unit,
     onFavoriteClick: () -> Unit,
     modifier: Modifier = Modifier,
+    preferredLocale: String = "",
     size: VideoListItemSize = VideoListItemSize.Default,
     showFavoriteButton: Boolean = true
 ) {
     val isPremiumLocked = video.isPremium && !isPremiumSubscriptionActive
+    val displayTitle = video.displayTitle(preferredLocale)
     val dimensions = size.dimensions()
     val cardShape = RoundedCornerShape(dimensions.cardCorner)
     val imageShape = RoundedCornerShape(dimensions.imageCorner)
@@ -166,7 +169,7 @@ fun VideoListItem(
                 Log.d("previewImageUrl","video.previewImageUrl: ${video.previewImageUrl}")
                 SubcomposeAsyncImage(
                     model = video.previewImageUrl,
-                    contentDescription = video.title,
+                    contentDescription = displayTitle,
                     modifier = Modifier
                         .fillMaxSize()
                         .background(Color(0xFFE2E8F0)),
@@ -185,7 +188,7 @@ fun VideoListItem(
                     success = { state ->
                         Image(
                             painter = state.painter,
-                            contentDescription = video.title,
+                            contentDescription = displayTitle,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .fillMaxSize()
@@ -281,7 +284,7 @@ fun VideoListItem(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = video.title,
+                    text = displayTitle,
                     color = Color(0xFF0F172A),
                     fontWeight = FontWeight.Bold,
                     fontSize = dimensions.titleFontSize,

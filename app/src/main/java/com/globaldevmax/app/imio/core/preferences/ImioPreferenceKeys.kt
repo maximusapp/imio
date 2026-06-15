@@ -22,5 +22,8 @@ object VideoContentLocale {
     const val UK = "uk"
     const val EN = "en"
 
+    /** Video catalog availability: shown for every user language preference. */
+    const val ALL = "all"
+
     val SUPPORTED = setOf(UK, EN)
 }

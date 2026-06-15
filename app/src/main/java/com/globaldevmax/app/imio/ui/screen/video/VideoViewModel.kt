@@ -123,7 +123,8 @@ class VideoViewModel(
 
         _uiState.value = VideoUiState.Ready(
             video = video,
-            otherVideos = otherVideos
+            otherVideos = otherVideos,
+            contentLocale = contentLocale
         )
     }
 

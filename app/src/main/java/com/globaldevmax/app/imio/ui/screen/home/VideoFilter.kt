@@ -1,6 +1,8 @@
 package com.globaldevmax.app.imio.ui.screen.home
 
 import com.globaldevmax.app.imio.domain.model.Video
+import com.globaldevmax.app.imio.domain.model.displayDescription
+import com.globaldevmax.app.imio.domain.model.displayTitle
 
 enum class VideoFilter {
     ALL,
@@ -17,13 +19,13 @@ enum class VideoFilter {
 fun List<Video>.filterBy(filter: VideoFilter): List<Video> =
     filter { video -> filter.matches(video) }
 
-fun List<Video>.filterBySearch(query: String): List<Video> {
+fun List<Video>.filterBySearch(query: String, preferredLocale: String = ""): List<Video> {
     val trimmedQuery = query.trim()
     if (trimmedQuery.isEmpty()) return this
 
     return filter { video ->
-        video.title.contains(trimmedQuery, ignoreCase = true) ||
-            video.description.contains(trimmedQuery, ignoreCase = true) ||
+        video.displayTitle(preferredLocale).contains(trimmedQuery, ignoreCase = true) ||
+            video.displayDescription(preferredLocale).contains(trimmedQuery, ignoreCase = true) ||
             video.searchKeywords.any { keyword ->
                 keyword.contains(trimmedQuery, ignoreCase = true)
             } ||

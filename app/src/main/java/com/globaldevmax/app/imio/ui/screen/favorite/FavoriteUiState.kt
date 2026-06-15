@@ -8,6 +8,7 @@ sealed interface FavoriteUiState {
     ) : FavoriteUiState
 
     data class Success(
-        val videos: List<Video>
+        val videos: List<Video>,
+        val contentLocale: String = ""
     ) : FavoriteUiState
 }

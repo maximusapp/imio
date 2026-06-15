@@ -37,7 +37,10 @@ class FavoriteViewModel(
         if (displayed.isEmpty()) {
             FavoriteUiState.Empty(isEveningModeActive = isEveningModeActive)
         } else {
-            FavoriteUiState.Success(displayed)
+            FavoriteUiState.Success(
+                videos = displayed,
+                contentLocale = contentLocale
+            )
         }
     }
         .stateIn(
