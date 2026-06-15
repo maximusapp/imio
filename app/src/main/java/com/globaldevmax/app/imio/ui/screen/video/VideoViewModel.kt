@@ -13,6 +13,7 @@ import com.globaldevmax.app.imio.domain.model.Video
 import com.globaldevmax.app.imio.domain.model.relatedVideosFor
 import com.globaldevmax.app.imio.core.evening.EveningModeStore
 import com.globaldevmax.app.imio.core.parent.ParentModeStore
+import com.globaldevmax.app.imio.domain.repository.PremiumRepository
 import com.globaldevmax.app.imio.domain.usecase.GetCachedVideosUseCase
 import com.globaldevmax.app.imio.domain.usecase.GetVideoByIdUseCase
 import com.globaldevmax.app.imio.domain.usecase.ObservePreferredVideoLocaleUseCase
@@ -33,6 +34,7 @@ class VideoViewModel(
     observePreferredVideoLocaleUseCase: ObservePreferredVideoLocaleUseCase,
     private val eveningModeStore: EveningModeStore,
     private val parentModeStore: ParentModeStore,
+    private val premiumRepository: PremiumRepository,
     okHttpClient: OkHttpClient
 ) : ViewModel() {
 
@@ -41,6 +43,7 @@ class VideoViewModel(
 
     private var contentLocale: String = ""
     private var isEveningModeActive: Boolean = false
+    private var isPremiumActive: Boolean = false
 
     private val dataSourceFactory = OkHttpDataSource.Factory(okHttpClient)
         .setUserAgent(USER_AGENT)
@@ -61,6 +64,12 @@ class VideoViewModel(
         viewModelScope.launch {
             eveningModeStore.isActive.collect { isActive ->
                 isEveningModeActive = isActive
+                (_uiState.value as? VideoUiState.Ready)?.video?.let { updateReadyState(it) }
+            }
+        }
+        viewModelScope.launch {
+            premiumRepository.isPremiumActive.collect { isActive ->
+                isPremiumActive = isActive
                 (_uiState.value as? VideoUiState.Ready)?.video?.let { updateReadyState(it) }
             }
         }
@@ -144,7 +153,10 @@ class VideoViewModel(
         val allVideos = getCachedVideosUseCase()
             .forContentLocale(contentLocale)
             .forEveningMode(isEveningModeActive)
-        val otherVideos = allVideos.relatedVideosFor(video)
+        val otherVideos = allVideos.relatedVideosFor(
+            currentVideo = video,
+            isPremiumActive = isPremiumActive
+        )
 
         _uiState.value = VideoUiState.Ready(
             video = video,

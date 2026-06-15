@@ -25,6 +25,7 @@ val viewModelModule = module {
             observePreferredVideoLocaleUseCase = get(),
             eveningModeStore = get(),
             parentModeStore = get(),
+            premiumRepository = get(),
             okHttpClient = get()
         )
     }

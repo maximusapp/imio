@@ -61,18 +61,26 @@ private const val RELATED_VIDEOS_LIMIT = 25
 
 fun List<Video>.relatedVideosFor(
     currentVideo: Video,
-    limit: Int = RELATED_VIDEOS_LIMIT
+    limit: Int = RELATED_VIDEOS_LIMIT,
+    isPremiumActive: Boolean = true
 ): List<Video> {
-    val byId = associateBy { it.id }
+    val accessibleVideos = if (isPremiumActive) this else filter { !it.isPremium }
+    val accessibleById = accessibleVideos.associateBy { it.id }
 
     val related = currentVideo.relatedVideoIds
-        .mapNotNull { relatedId -> byId[relatedId] }
+        .mapNotNull { relatedId -> accessibleById[relatedId] }
         .filter { it.id != currentVideo.id }
+        .distinctBy { it.id }
 
-    val relatedIds = related.map { it.id }.toSet()
-    val others = filter { video ->
-        video.id != currentVideo.id && video.id !in relatedIds
-    }
+    val includedIds = related.mapTo(mutableSetOf()) { it.id }
+    includedIds += currentVideo.id
 
-    return (related + others).take(limit)
+    val fillers = accessibleVideos
+        .asSequence()
+        .filter { it.id !in includedIds }
+        .shuffled()
+        .take((limit - related.size).coerceAtLeast(0))
+        .toList()
+
+    return related + fillers
 }
