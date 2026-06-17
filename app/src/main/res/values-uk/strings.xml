@@ -25,10 +25,8 @@
     <string name="home_video_duration_minutes">%1$d хв</string>
     <string name="home_video_format">Формат: %1$s</string>
     <string name="home_load_error">Не вдалося завантажити відео. Перевірте підключення та спробуйте ще раз.</string>
-    <string name="home_filter_all">Всі відео</string>
-    <string name="home_filter_premium">Преміум</string>
-    <string name="home_filter_standard">Звичайні</string>
-    <string name="home_filter_empty">У цій категорії немає відео</string>
+    <string name="catalog_show_premium_videos">Показувати Premium відео</string>
+    <string name="home_catalog_empty">Немає відео для показу</string>
     <string name="search_screen_title">Пошук</string>
     <string name="search_empty_catalog">Відео ще немає. Потягніть вниз для оновлення або спробуйте ще раз.</string>
     <string name="search_load_error">Не вдалося завантажити відео. Перевірте підключення та спробуйте ще раз.</string>

@@ -16,6 +16,8 @@ internal object ImioPreferenceKeys {
     val PARENT_MODE_RECENT_MINUTES = stringPreferencesKey("parent_mode_recent_minutes")
 
     val EVENING_MODE_IS_ACTIVE = booleanPreferencesKey("evening_mode_is_active")
+
+    val SHOW_PREMIUM_VIDEOS_IN_CATALOG = booleanPreferencesKey("show_premium_videos_in_catalog")
 }
 
 object VideoContentLocale {

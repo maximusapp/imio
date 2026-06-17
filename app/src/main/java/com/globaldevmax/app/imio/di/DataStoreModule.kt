@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import com.globaldevmax.app.imio.core.catalog.VideoCatalogStore
 import com.globaldevmax.app.imio.core.evening.EveningModeStore
 import com.globaldevmax.app.imio.core.preferences.LegacySharedPreferencesMigration
 import com.globaldevmax.app.imio.core.locale.VideoLocaleStore
@@ -25,4 +26,5 @@ val dataStoreModule = module {
     single { VideoLocaleStore(get()) }
     single { ParentModeStore(get()) }
     single { EveningModeStore(get()) }
+    single { VideoCatalogStore(get()) }
 }

@@ -29,9 +29,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.globaldevmax.app.imio.R
 import com.globaldevmax.app.imio.domain.model.Video
 import com.globaldevmax.app.imio.ui.ads.ImioBannerAd
-import com.globaldevmax.app.imio.ui.components.HomeVideoFilterBar
 import com.globaldevmax.app.imio.ui.components.ImioLoadingIndicator
 import com.globaldevmax.app.imio.ui.components.LottieEmptyState
+import com.globaldevmax.app.imio.ui.components.ShowPremiumVideosToggle
 import com.globaldevmax.app.imio.ui.components.VideoListItem
 import com.globaldevmax.app.imio.ui.theme.ImioGradientTop
 import com.globaldevmax.app.imio.ui.theme.ImioOnBackground
@@ -111,16 +111,18 @@ fun HomeScreen(
                             .padding(horizontal = 20.dp)
                             .padding(top = 12.dp, bottom = 0.dp)
                     ) {
-                        HomeVideoFilterBar(
-                            selectedFilter = state.selectedFilter,
-                            onFilterSelected = viewModel::onFilterSelected,
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                        if (!isPremiumSubscriptionActive) {
+                            ShowPremiumVideosToggle(
+                                showPremiumVideos = state.showPremiumVideos,
+                                onShowPremiumVideosChange = viewModel::setShowPremiumVideos,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
 
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(top = 5.dp),
+                                .padding(top = if (isPremiumSubscriptionActive) 5.dp else 0.dp),
                             contentPadding = PaddingValues(bottom = 4.dp),
                             verticalArrangement = Arrangement.spacedBy(18.dp)
                         ) {
@@ -131,7 +133,7 @@ fun HomeScreen(
                                             if (state.isEveningModeActive) {
                                                 R.string.evening_mode_no_videos
                                             } else {
-                                                R.string.home_filter_empty
+                                                R.string.home_catalog_empty
                                             }
                                         ),
                                         style = MaterialTheme.typography.bodyLarge,

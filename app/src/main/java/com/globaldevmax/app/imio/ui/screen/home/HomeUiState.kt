@@ -9,9 +9,10 @@ sealed interface HomeUiState {
 
     data class Success(
         val allVideos: List<Video>,
-        val selectedFilter: VideoFilter = VideoFilter.ALL,
         val isEveningModeActive: Boolean = false,
-        val contentLocale: String = ""
+        val contentLocale: String = "",
+        val showPremiumVideos: Boolean = false,
+        val isPremiumSubscriptionActive: Boolean = false
     ) : HomeUiState {
         private val modeFilteredVideos: List<Video>
             get() = allVideos
@@ -19,7 +20,10 @@ sealed interface HomeUiState {
                 .forEveningMode(isEveningModeActive)
 
         val displayedVideos: List<Video>
-            get() = modeFilteredVideos.filterBy(selectedFilter)
+            get() = modeFilteredVideos.filterPremiumVisibility(
+                isPremiumSubscriptionActive = isPremiumSubscriptionActive,
+                showPremiumVideos = showPremiumVideos
+            )
     }
 
     data class Error(

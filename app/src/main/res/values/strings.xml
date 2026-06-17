@@ -35,10 +35,8 @@
     <string name="home_video_duration_minutes">%1$dm</string>
     <string name="home_video_format">Format: %1$s</string>
     <string name="home_load_error">Failed to load videos. Check your connection and try again.</string>
-    <string name="home_filter_all">All videos</string>
-    <string name="home_filter_premium">Premium</string>
-    <string name="home_filter_standard">Standard</string>
-    <string name="home_filter_empty">No videos in this category</string>
+    <string name="catalog_show_premium_videos">Show Premium videos</string>
+    <string name="home_catalog_empty">No videos to show</string>
     <string name="search_screen_title">Search</string>
     <string name="search_empty_catalog">No videos available yet. Pull to refresh or try again.</string>
     <string name="search_load_error">Failed to load videos. Check your connection and try again.</string>

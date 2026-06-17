@@ -3,8 +3,10 @@ package com.globaldevmax.app.imio.ui.screen.home
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.globaldevmax.app.imio.core.catalog.VideoCatalogStore
 import com.globaldevmax.app.imio.core.evening.EveningModeStore
 import com.globaldevmax.app.imio.domain.model.Video
+import com.globaldevmax.app.imio.domain.repository.PremiumRepository
 import com.globaldevmax.app.imio.domain.usecase.GetCachedVideosUseCase
 import com.globaldevmax.app.imio.domain.usecase.GetVideosUseCase
 import com.globaldevmax.app.imio.domain.usecase.ObserveFavoriteIdsUseCase
@@ -26,6 +28,8 @@ class HomeViewModel(
     observeFavoriteIdsUseCase: ObserveFavoriteIdsUseCase,
     private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
     private val eveningModeStore: EveningModeStore,
+    private val videoCatalogStore: VideoCatalogStore,
+    private val premiumRepository: PremiumRepository,
     observePreferredVideoLocaleUseCase: ObservePreferredVideoLocaleUseCase
 ) : ViewModel() {
 
@@ -37,6 +41,8 @@ class HomeViewModel(
 
     private var contentLocale: String = ""
     private var isEveningModeActive: Boolean = false
+    private var showPremiumVideos: Boolean = false
+    private var isPremiumSubscriptionActive: Boolean = false
 
     val favoriteIds: StateFlow<Set<String>> = observeFavoriteIdsUseCase()
         .stateIn(
@@ -52,6 +58,18 @@ class HomeViewModel(
             }
         }
         viewModelScope.launch {
+            videoCatalogStore.showPremiumVideos.collect { showPremium ->
+                showPremiumVideos = showPremium
+                updateCatalogDisplayPreferences()
+            }
+        }
+        viewModelScope.launch {
+            premiumRepository.isPremiumActive.collect { isActive ->
+                isPremiumSubscriptionActive = isActive
+                updateCatalogDisplayPreferences()
+            }
+        }
+        viewModelScope.launch {
             observePreferredVideoLocaleUseCase()
                 .filterNotNull()
                 .collect { locale ->
@@ -61,14 +79,11 @@ class HomeViewModel(
         }
         viewModelScope.launch {
             isEveningModeActive = eveningModeStore.isActive.first()
+            showPremiumVideos = videoCatalogStore.showPremiumVideos.first()
+            isPremiumSubscriptionActive = premiumRepository.isPremiumActive.first()
             val cachedVideos = getCachedVideosUseCase()
             if (cachedVideos.isNotEmpty()) {
-                _uiState.value = HomeUiState.Success(
-                    allVideos = cachedVideos,
-                    selectedFilter = VideoFilter.ALL,
-                    isEveningModeActive = isEveningModeActive,
-                    contentLocale = contentLocale
-                )
+                _uiState.value = successState(cachedVideos)
             } else {
                 loadVideos()
             }
@@ -90,9 +105,13 @@ class HomeViewModel(
         }
     }
 
+    fun setShowPremiumVideos(show: Boolean) {
+        viewModelScope.launch {
+            videoCatalogStore.setShowPremiumVideos(show)
+        }
+    }
+
     private suspend fun fetchVideos() {
-        val previousState = _uiState.value as? HomeUiState.Success
-        val previousFilter = previousState?.selectedFilter ?: VideoFilter.ALL
         getVideosUseCase()
             .onSuccess { videos ->
                 Log.d(TAG, "Loaded ${videos.size} video(s) from KeepData")
@@ -103,12 +122,7 @@ class HomeViewModel(
                 if (videos.isEmpty()) {
                     _uiState.value = HomeUiState.Empty
                 } else {
-                    _uiState.value = HomeUiState.Success(
-                        allVideos = videos,
-                        selectedFilter = previousFilter,
-                        isEveningModeActive = isEveningModeActive,
-                        contentLocale = contentLocale
-                    )
+                    _uiState.value = successState(videos)
                 }
             }
             .onFailure { error ->
@@ -117,16 +131,6 @@ class HomeViewModel(
                     message = error.message.orEmpty()
                 )
             }
-    }
-
-    fun onFilterSelected(filter: VideoFilter) {
-        _uiState.update { state ->
-            if (state is HomeUiState.Success) {
-                state.copy(selectedFilter = filter)
-            } else {
-                state
-            }
-        }
     }
 
     fun setEveningModeActive(isActive: Boolean) {
@@ -147,6 +151,29 @@ class HomeViewModel(
                 else -> state
             }
         }
+    }
+
+    private fun updateCatalogDisplayPreferences() {
+        _uiState.update { state ->
+            if (state is HomeUiState.Success) {
+                state.copy(
+                    showPremiumVideos = showPremiumVideos,
+                    isPremiumSubscriptionActive = isPremiumSubscriptionActive
+                )
+            } else {
+                state
+            }
+        }
+    }
+
+    private fun successState(videos: List<Video>): HomeUiState.Success {
+        return HomeUiState.Success(
+            allVideos = videos,
+            isEveningModeActive = isEveningModeActive,
+            contentLocale = contentLocale,
+            showPremiumVideos = showPremiumVideos,
+            isPremiumSubscriptionActive = isPremiumSubscriptionActive
+        )
     }
 
     fun toggleFavorite(video: Video) {

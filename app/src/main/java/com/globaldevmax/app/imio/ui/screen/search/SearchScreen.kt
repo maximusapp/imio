@@ -36,6 +36,7 @@ import com.globaldevmax.app.imio.ui.ads.ImioBannerAd
 import com.globaldevmax.app.imio.ui.components.HomeVideoSearchBar
 import com.globaldevmax.app.imio.ui.components.ImioLoadingIndicator
 import com.globaldevmax.app.imio.ui.components.LottieEmptyState
+import com.globaldevmax.app.imio.ui.components.ShowPremiumVideosToggle
 import com.globaldevmax.app.imio.ui.components.VideoListItem
 import com.globaldevmax.app.imio.ui.theme.ImioGradientTop
 import com.globaldevmax.app.imio.ui.theme.ImioOnBackground
@@ -135,10 +136,18 @@ fun SearchScreen(
                             modifier = Modifier.fillMaxWidth()
                         )
 
+                        if (!isPremiumSubscriptionActive) {
+                            ShowPremiumVideosToggle(
+                                showPremiumVideos = state.showPremiumVideos,
+                                onShowPremiumVideosChange = viewModel::setShowPremiumVideos,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(top = 14.dp),
+                                .padding(top = if (isPremiumSubscriptionActive) 14.dp else 6.dp),
                             contentPadding = PaddingValues(bottom = 4.dp),
                             verticalArrangement = Arrangement.spacedBy(14.dp)
                         ) {

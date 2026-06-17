@@ -3,8 +3,10 @@ package com.globaldevmax.app.imio.ui.screen.search
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.globaldevmax.app.imio.core.catalog.VideoCatalogStore
 import com.globaldevmax.app.imio.core.evening.EveningModeStore
 import com.globaldevmax.app.imio.domain.model.Video
+import com.globaldevmax.app.imio.domain.repository.PremiumRepository
 import com.globaldevmax.app.imio.domain.usecase.GetCachedVideosUseCase
 import com.globaldevmax.app.imio.domain.usecase.GetVideosUseCase
 import com.globaldevmax.app.imio.domain.usecase.ObserveFavoriteIdsUseCase
@@ -26,6 +28,8 @@ class SearchViewModel(
     observeFavoriteIdsUseCase: ObserveFavoriteIdsUseCase,
     private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
     private val eveningModeStore: EveningModeStore,
+    private val videoCatalogStore: VideoCatalogStore,
+    private val premiumRepository: PremiumRepository,
     observePreferredVideoLocaleUseCase: ObservePreferredVideoLocaleUseCase
 ) : ViewModel() {
 
@@ -37,6 +41,8 @@ class SearchViewModel(
 
     private var contentLocale: String = ""
     private var isEveningModeActive: Boolean = false
+    private var showPremiumVideos: Boolean = false
+    private var isPremiumSubscriptionActive: Boolean = false
 
     val favoriteIds: StateFlow<Set<String>> = observeFavoriteIdsUseCase()
         .stateIn(
@@ -52,6 +58,18 @@ class SearchViewModel(
             }
         }
         viewModelScope.launch {
+            videoCatalogStore.showPremiumVideos.collect { showPremium ->
+                showPremiumVideos = showPremium
+                updateCatalogDisplayPreferences()
+            }
+        }
+        viewModelScope.launch {
+            premiumRepository.isPremiumActive.collect { isActive ->
+                isPremiumSubscriptionActive = isActive
+                updateCatalogDisplayPreferences()
+            }
+        }
+        viewModelScope.launch {
             observePreferredVideoLocaleUseCase()
                 .filterNotNull()
                 .collect { locale ->
@@ -62,13 +80,11 @@ class SearchViewModel(
 
         viewModelScope.launch {
             isEveningModeActive = eveningModeStore.isActive.first()
+            showPremiumVideos = videoCatalogStore.showPremiumVideos.first()
+            isPremiumSubscriptionActive = premiumRepository.isPremiumActive.first()
             val cachedVideos = getCachedVideosUseCase()
             if (cachedVideos.isNotEmpty()) {
-                _uiState.value = SearchUiState.Ready(
-                    allVideos = cachedVideos,
-                    contentLocale = contentLocale,
-                    isEveningModeActive = isEveningModeActive
-                )
+                _uiState.value = readyState(cachedVideos)
             } else {
                 loadVideos()
             }
@@ -102,6 +118,12 @@ class SearchViewModel(
 
     fun clearSearch() {
         onSearchQueryChange("")
+    }
+
+    fun setShowPremiumVideos(show: Boolean) {
+        viewModelScope.launch {
+            videoCatalogStore.setShowPremiumVideos(show)
+        }
     }
 
     fun setEveningModeActive(isActive: Boolean) {
@@ -138,8 +160,7 @@ class SearchViewModel(
                 Log.d(TAG, "Loaded ${videos.size} video(s) for search")
                 applyVideos(
                     videos = videos,
-                    searchQuery = previousSearchQuery,
-                    isEveningModeActive = isEveningModeActive
+                    searchQuery = previousSearchQuery
                 )
             }
             .onFailure { error ->
@@ -148,8 +169,7 @@ class SearchViewModel(
                 if (cachedVideos.isNotEmpty()) {
                     applyVideos(
                         videos = cachedVideos,
-                        searchQuery = previousSearchQuery,
-                        isEveningModeActive = isEveningModeActive
+                        searchQuery = previousSearchQuery
                     )
                 } else {
                     _uiState.value = SearchUiState.Error(message = error.message.orEmpty())
@@ -159,19 +179,43 @@ class SearchViewModel(
 
     private fun applyVideos(
         videos: List<Video>,
-        searchQuery: String,
-        isEveningModeActive: Boolean
+        searchQuery: String
     ) {
         if (videos.isEmpty()) {
             _uiState.value = SearchUiState.Empty
         } else {
-            _uiState.value = SearchUiState.Ready(
-                allVideos = videos,
-                searchQuery = searchQuery,
-                isEveningModeActive = isEveningModeActive,
-                contentLocale = contentLocale
+            _uiState.value = readyState(
+                videos = videos,
+                searchQuery = searchQuery
             )
         }
+    }
+
+    private fun updateCatalogDisplayPreferences() {
+        _uiState.update { state ->
+            if (state is SearchUiState.Ready) {
+                state.copy(
+                    showPremiumVideos = showPremiumVideos,
+                    isPremiumSubscriptionActive = isPremiumSubscriptionActive
+                )
+            } else {
+                state
+            }
+        }
+    }
+
+    private fun readyState(
+        videos: List<Video>,
+        searchQuery: String = ""
+    ): SearchUiState.Ready {
+        return SearchUiState.Ready(
+            allVideos = videos,
+            searchQuery = searchQuery,
+            isEveningModeActive = isEveningModeActive,
+            contentLocale = contentLocale,
+            showPremiumVideos = showPremiumVideos,
+            isPremiumSubscriptionActive = isPremiumSubscriptionActive
+        )
     }
 
     private companion object {
